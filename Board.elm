@@ -10,7 +10,7 @@ import Debug
 
 -- MODEL
 
-type alias Row = Array.Array (Maybe String)
+type alias Row = Array.Array String
 
 type alias Board = Array.Array Row
 
@@ -19,26 +19,21 @@ type alias Model =
     gameHeight : Int,
     boardSquareSize : Int,
     boardSquareSpacing : Int,
-    board : Board
+    board : Board,
+    emptySquareRow : Int,
+    emptySquareColumn : Int
   }
 
 
-createSquare : Int -> Int -> Int -> Int -> Maybe String
-createSquare gameWidth gameHeight row column =
-  let
-    isEmpty =
-      row == gameHeight - 1 && column == gameWidth - 1
-  in
-    if isEmpty
-      then Nothing
-      else gameWidth * row + column + 1
-        |> toString
-        |> Just
+createSquare : Int -> Int -> Int -> String
+createSquare gameWidth row column =
+  gameWidth * row + column + 1
+    |> toString
 
 
 createRow : Int -> Int -> Int -> Row
 createRow gameWidth gameHeight row =
-  Array.initialize gameWidth (createSquare gameWidth gameHeight row)
+  Array.initialize gameWidth (createSquare gameWidth row)
 
 
 createModel : Int -> Int -> Int -> Int -> Model
@@ -49,7 +44,9 @@ createModel gameWidth gameHeight boardSquareSize boardSquareSpacing =
     boardSquareSpacing = boardSquareSpacing,
     board =
       Array.initialize gameHeight identity
-        |> Array.map (createRow gameWidth gameHeight)
+        |> Array.map (createRow gameWidth gameHeight),
+    emptySquareRow = gameHeight - 1,
+    emptySquareColumn = gameWidth - 1
   }
 
 
@@ -113,13 +110,20 @@ drawSquare gameWidth gameHeight boardSquareSize boardSquareSpacing row column na
     ]
 
 
-drawRow : Int -> Int -> Int -> Int -> Int -> Row -> List Form
-drawRow gameWidth gameHeight boardSquareSize boardSquareSpacing row maybeNames =  
-  maybeNames
-    |> Array.toList
-    |> List.filterMap identity
-    |> List.indexedMap (drawSquare gameWidth gameHeight boardSquareSize boardSquareSpacing row)
-    |> List.concat
+drawRow : Int -> Int -> Int -> Int -> Int -> Int -> Int -> Row -> List Form
+drawRow gameWidth gameHeight boardSquareSize boardSquareSpacing emptySquareRow emptySquareColumn row squareNames =
+  let
+    nonEmptySquareNames =
+      if row == emptySquareRow
+        then Array.append
+          (Array.slice 0 emptySquareColumn squareNames)
+          (Array.slice (emptySquareColumn + 1) (Array.length squareNames) squareNames)
+        else squareNames
+  in
+    nonEmptySquareNames
+      |> Array.toList
+      |> List.indexedMap (drawSquare gameWidth gameHeight boardSquareSize boardSquareSpacing row)
+      |> List.concat
 
 
 view : (Int, Int) -> Model -> Element
@@ -133,7 +137,7 @@ view (windowWidth, windowHeight) model =
     squares =
       model.board
         |> Array.toList
-        |> List.indexedMap (drawRow model.gameWidth model.gameHeight model.boardSquareSize model.boardSquareSpacing)
+        |> List.indexedMap (drawRow model.gameWidth model.gameHeight model.boardSquareSize model.boardSquareSpacing model.emptySquareRow model.emptySquareColumn)
         |> List.concat
   in
     collage windowWidth windowHeight (board :: squares)
