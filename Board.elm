@@ -66,10 +66,22 @@ initialModel = createModel 4 3 100 1
 
 type Action = NoOp | Left | Right | Up | Down
 
+
+canMove : Model -> Action -> Bool
+canMove model action =
+  case action of
+    Left -> model.emptySquareColumn < model.gameWidth - 1
+    Right -> model.emptySquareColumn > 0
+    Up -> model.emptySquareRow < model.gameHeight - 1
+    Down -> model.emptySquareRow > 0
+    _ -> False
+
+
 update : Action -> Model -> Model
 update action model =
   let
     _ = Debug.log "action" action
+    _ = Debug.log "can move" (canMove model action)
   in
     model
 
