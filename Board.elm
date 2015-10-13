@@ -56,9 +56,14 @@ initialModel = createModel 4 3 100 1
 
 -- UPDATE
 
-update : { x : Int, y : Int } -> Model -> Model
-update arrow model =
-  model
+type Action = NoOp | Left | Right | Up | Down
+
+update : Action -> Model -> Model
+update action model =
+  let
+    _ = Debug.log "action" action
+  in
+    model
 
 
 -- VIEW
@@ -145,9 +150,29 @@ view (windowWidth, windowHeight) model =
 
 -- SIGNALS
 
+arrows : Signal Action
+arrows =
+  let
+    toAction arrow =
+      if | arrow == { x = -1, y = 0 } -> Left
+         | arrow == { x = 1, y = 0 } -> Right
+         | arrow == { x = 0, y = 1 } -> Up
+         | arrow == { x = 0, y = -1 } -> Down
+         | otherwise -> NoOp
+  in
+    Keyboard.arrows
+      |> Signal.map toAction
+      |> Signal.filter (\a -> a /= NoOp) NoOp
+
+
+input : Signal Action
+input =
+  arrows -- Will be extended with mouse clicks later
+
+
 model : Signal Model
 model =
-  Signal.foldp update initialModel Keyboard.arrows
+  Signal.foldp update initialModel input
 
 
 -- MAIN
