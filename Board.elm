@@ -10,7 +10,13 @@ import Debug
 
 -- MODEL
 
-type alias Row = Array.Array String
+type alias Square =
+  { name : String,
+    xOffset : Int,
+    yOffset : Int
+  }
+
+type alias Row = Array.Array Square
 
 type alias Board = Array.Array Row
 
@@ -25,10 +31,12 @@ type alias Model =
   }
 
 
-createSquare : Int -> Int -> Int -> String
+createSquare : Int -> Int -> Int -> Square
 createSquare gameWidth row column =
-  gameWidth * row + column + 1
-    |> toString
+  { name = (toString (gameWidth * row + column + 1)),
+    xOffset = 0,
+    yOffset = 0
+  }
 
 
 createRow : Int -> Int -> Int -> Row
@@ -94,20 +102,20 @@ drawBoard width height =
     |> filled Color.lightGrey
 
 
-drawSquare : Int -> Int -> Int -> Int -> Int -> Int -> String -> List Form
-drawSquare gameWidth gameHeight boardSquareSize boardSquareSpacing row column name =
+drawSquare : Int -> Int -> Int -> Int -> Int -> Int -> Square -> List Form
+drawSquare gameWidth gameHeight boardSquareSize boardSquareSpacing row column square =
   let
-    actualSquareSize = boardSquareSize - 2 * boardSquareSpacing
+    squareSize = boardSquareSize - 2 * boardSquareSpacing
     boardWidth' = boardWidth gameWidth boardSquareSize
     boardHeight' = boardHeight gameHeight boardSquareSize
 
-    dx = (actualSquareSize - boardWidth') // 2 + (column * boardSquareSize) + boardSquareSpacing
-    dy = (boardHeight' - actualSquareSize) // 2 - (row * boardSquareSize) - boardSquareSpacing
+    dx = (squareSize - boardWidth') // 2 + (column * boardSquareSize) + boardSquareSpacing + square.xOffset
+    dy = (boardHeight' - squareSize) // 2 - (row * boardSquareSize) - boardSquareSpacing + square.yOffset
   in
-    [ square (toFloat actualSquareSize)
+    [ Graphics.Collage.square (toFloat squareSize)
         |> filled Color.grey
         |> move (toFloat dx, toFloat dy),
-      fromString name
+      fromString square.name
         |> monospace
         |> Text.height (toFloat (boardTextSize boardSquareSize boardSquareSpacing))
         |> text
@@ -116,16 +124,16 @@ drawSquare gameWidth gameHeight boardSquareSize boardSquareSpacing row column na
 
 
 drawRow : Int -> Int -> Int -> Int -> Int -> Int -> Int -> Row -> List Form
-drawRow gameWidth gameHeight boardSquareSize boardSquareSpacing emptySquareRow emptySquareColumn row squareNames =
+drawRow gameWidth gameHeight boardSquareSize boardSquareSpacing emptySquareRow emptySquareColumn row squares =
   let
-    nonEmptySquareNames =
+    nonEmptySquares =
       if row == emptySquareRow
         then Array.append
-          (Array.slice 0 emptySquareColumn squareNames)
-          (Array.slice (emptySquareColumn + 1) (Array.length squareNames) squareNames)
-        else squareNames
+          (Array.slice 0 emptySquareColumn squares)
+          (Array.slice (emptySquareColumn + 1) (Array.length squares) squares)
+        else squares
   in
-    nonEmptySquareNames
+    nonEmptySquares
       |> Array.toList
       |> List.indexedMap (drawSquare gameWidth gameHeight boardSquareSize boardSquareSpacing row)
       |> List.concat
