@@ -114,40 +114,40 @@ drawBoard width height =
     |> filled Color.lightGrey
 
 
-drawSquare : Int -> Int -> Int -> Int -> Int -> Int -> Square -> List Form
-drawSquare gameWidth gameHeight boardSquareSize boardSquareSpacing row column square =
+drawSquare : Model -> Int -> Int -> Square -> List Form
+drawSquare model row column square =
   let
-    squareSize = boardSquareSize - 2 * boardSquareSpacing
-    boardWidth' = boardWidth gameWidth boardSquareSize
-    boardHeight' = boardHeight gameHeight boardSquareSize
+    squareSize = model.boardSquareSize - 2 * model.boardSquareSpacing
+    boardWidth' = boardWidth model.gameWidth model.boardSquareSize
+    boardHeight' = boardHeight model.gameHeight model.boardSquareSize
 
-    dx = (squareSize - boardWidth') // 2 + (column * boardSquareSize) + boardSquareSpacing + square.xOffset
-    dy = (boardHeight' - squareSize) // 2 - (row * boardSquareSize) - boardSquareSpacing + square.yOffset
+    dx = (squareSize - boardWidth') // 2 + (column * model.boardSquareSize) + model.boardSquareSpacing + square.xOffset
+    dy = (boardHeight' - squareSize) // 2 - (row * model.boardSquareSize) - model.boardSquareSpacing + square.yOffset
   in
     [ Graphics.Collage.square (toFloat squareSize)
         |> filled Color.grey
         |> move (toFloat dx, toFloat dy),
       fromString square.name
         |> monospace
-        |> Text.height (toFloat (boardTextSize boardSquareSize boardSquareSpacing))
+        |> Text.height (toFloat (boardTextSize model.boardSquareSize model.boardSquareSpacing))
         |> text
-        |> move (toFloat dx, toFloat (dy + (boardTextOffset boardSquareSize boardSquareSpacing)))
+        |> move (toFloat dx, toFloat (dy + (boardTextOffset model.boardSquareSize model.boardSquareSpacing)))
     ]
 
 
-drawRow : Int -> Int -> Int -> Int -> Int -> Int -> Int -> Row -> List Form
-drawRow gameWidth gameHeight boardSquareSize boardSquareSpacing emptySquareRow emptySquareColumn row squares =
+drawRow : Model -> Int -> Row -> List Form
+drawRow model row squares =
   let
     nonEmptySquares =
-      if row == emptySquareRow
+      if row == model.emptySquareRow
         then Array.append
-          (Array.slice 0 emptySquareColumn squares)
-          (Array.slice (emptySquareColumn + 1) (Array.length squares) squares)
+          (Array.slice 0 model.emptySquareColumn squares)
+          (Array.slice (model.emptySquareColumn + 1) (Array.length squares) squares)
         else squares
   in
     nonEmptySquares
       |> Array.toList
-      |> List.indexedMap (drawSquare gameWidth gameHeight boardSquareSize boardSquareSpacing row)
+      |> List.indexedMap (drawSquare model row)
       |> List.concat
 
 
@@ -162,7 +162,7 @@ view (windowWidth, windowHeight) model =
     squares =
       model.board
         |> Array.toList
-        |> List.indexedMap (drawRow model.gameWidth model.gameHeight model.boardSquareSize model.boardSquareSpacing model.emptySquareRow model.emptySquareColumn)
+        |> List.indexedMap (drawRow model)
         |> List.concat
   in
     collage windowWidth windowHeight (board :: squares)
