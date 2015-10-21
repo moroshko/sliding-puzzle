@@ -5,7 +5,6 @@ import Array
 import Color
 import Window
 import Keyboard
-import Time
 import Debug
 
 
@@ -17,11 +16,6 @@ type alias Row = Array.Array Square
 
 type alias Board = Array.Array Row
 
-type AnimationDirection = NoAnimation | AnimateLeft | AnimateRight | AnimateUp | AnimateDown
-
-type alias Animation =
-  { direction : AnimationDirection, progress : Float }
-
 type alias Model =
   { gameWidth : Int,
     gameHeight : Int,
@@ -29,8 +23,7 @@ type alias Model =
     boardSquareSpacing : Int,
     board : Board,
     emptySquareRow : Int,
-    emptySquareColumn : Int,
-    animation : Animation
+    emptySquareColumn : Int
   }
 
 
@@ -46,16 +39,15 @@ createRow gameWidth gameHeight row =
 
 createModel : Int -> Int -> Int -> Int -> Model
 createModel gameWidth gameHeight boardSquareSize boardSquareSpacing =
-  { gameWidth = gameWidth,
-    gameHeight = gameHeight,
-    boardSquareSize = boardSquareSize,
-    boardSquareSpacing = boardSquareSpacing,
-    board =
+  { gameWidth = gameWidth
+  , gameHeight = gameHeight
+  , boardSquareSize = boardSquareSize
+  , boardSquareSpacing = boardSquareSpacing
+  , board =
       Array.initialize gameHeight identity
-        |> Array.map (createRow gameWidth gameHeight),
-    emptySquareRow = gameHeight - 1,
-    emptySquareColumn = gameWidth - 1,
-    animation = { direction = AnimateRight, progress = 0 }
+        |> Array.map (createRow gameWidth gameHeight)
+  , emptySquareRow = gameHeight - 1
+  , emptySquareColumn = gameWidth - 1
   }
 
 
@@ -65,7 +57,7 @@ initialModel = createModel 4 3 100 1
 
 -- UPDATE
 
-type Action = NoOp | ArrowLeft | ArrowRight | ArrowUp | ArrowDown | AnimationTick
+type Action = NoOp | ArrowLeft | ArrowRight | ArrowUp | ArrowDown
 
 
 canMove : Model -> Action -> Bool
@@ -84,28 +76,7 @@ update action model =
     _ = Debug.log "action" action
     _ = Debug.log "can move" (canMove model action)
   in
-    case action of
-      AnimationTick ->
-        case model.animation.direction of
-          NoAnimation ->
-            model
-
-          _ ->
-            let
-              newProgress = model.animation.progress + 0.01
-              newAnimation =
-                if newProgress >= 1
-                then
-                  { direction = NoAnimation,
-                    progress = 0 }
-                else
-                  { direction = model.animation.direction,
-                    progress = newProgress }
-            in
-              { model | animation <- newAnimation }
-
-      _ ->
-        model
+    model
 
 
 -- VIEW
@@ -136,45 +107,15 @@ drawBoard width height =
     |> filled Color.lightGrey
 
 
-squareOffset : Model -> Int -> Int -> { x : Int, y : Int }
-squareOffset model row column =
-  if model.animation.direction == NoAnimation
-    then { x = 0, y = 0 }
-    else let
-      offset = (model.animation.progress * (toFloat model.boardSquareSize)) |> round
-    in
-      case model.animation.direction of
-        AnimateLeft ->
-          if row == model.emptySquareRow && column == model.emptySquareColumn + 1
-            then { x = negate offset, y = 0 }
-            else { x = 0, y = 0 }
-
-        AnimateRight ->
-          if row == model.emptySquareRow && column == model.emptySquareColumn - 1
-            then { x = offset, y = 0 }
-            else { x = 0, y = 0 }
-
-        AnimateUp ->
-          if row == model.emptySquareRow + 1 && column == model.emptySquareColumn
-            then { x = 0, y = offset }
-            else { x = 0, y = 0 }
-
-        AnimateDown ->
-          if row == model.emptySquareRow - 1 && column == model.emptySquareColumn
-            then { x = 0, y = negate offset }
-            else { x = 0, y = 0 }      
-
-
 drawSquare : Model -> Int -> Int -> Square -> List Form
 drawSquare model row column square =
   let
     squareSize = model.boardSquareSize - 2 * model.boardSquareSpacing
     boardWidth' = boardWidth model.gameWidth model.boardSquareSize
     boardHeight' = boardHeight model.gameHeight model.boardSquareSize
-    offset = squareOffset model row column
 
-    dx = (squareSize - boardWidth') // 2 + (column * model.boardSquareSize) + model.boardSquareSpacing + offset.x
-    dy = (boardHeight' - squareSize) // 2 - (row * model.boardSquareSize) - model.boardSquareSpacing + offset.y
+    dx = (squareSize - boardWidth') // 2 + (column * model.boardSquareSize) + model.boardSquareSpacing
+    dy = (boardHeight' - squareSize) // 2 - (row * model.boardSquareSize) - model.boardSquareSpacing
   in
     [ Graphics.Collage.square (toFloat squareSize)
         |> filled Color.grey
@@ -237,14 +178,9 @@ arrows =
       |> Signal.filter (\a -> a /= NoOp) NoOp
 
 
-clock : Signal Action
-clock =
-  Signal.map (\_ -> AnimationTick) (Time.fps 200)
-
-
 input : Signal Action
 input =
-  Signal.merge arrows clock
+  arrows -- Will add mouse clicks later
 
 
 model : Signal Model
