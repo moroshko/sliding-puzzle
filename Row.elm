@@ -41,6 +41,6 @@ view : Model -> List Form
 view model =
   model
     |> Array.toList
-    |> List.filterMap (\maybeSquare -> maybeSquare)
+    |> List.filterMap identity
     |> List.map Square.view
     |> List.concat
