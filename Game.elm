@@ -19,7 +19,12 @@ initialModel =
 
 -- UPDATE
 
-type Action = NoOp | ArrowLeft | ArrowRight | ArrowUp | ArrowDown
+type Action
+  = NoOp
+  | ArrowLeft
+  | ArrowRight
+  | ArrowUp
+  | ArrowDown
 
 {--
 canMove : Model -> Action -> Bool

@@ -1,4 +1,4 @@
-module Board (Model, init, Action, update, view) where
+module Board (Model, init, Action(..), update, view) where
 
 import Array exposing (Array)
 import Graphics.Collage exposing (Form)
@@ -12,7 +12,10 @@ type alias Model =
   { gameWidth : Int
   , gameHeight : Int
   , squareSize : Int
+  , squareSpacing : Int
   , rows : Array Row.Model
+  , emptySquareRow : Int
+  , emptySquareColumn : Int
   }
 
 
@@ -23,17 +26,42 @@ init gameWidth gameHeight squareSize squareSpacing =
       Array.initialize gameHeight identity
         |> Array.map (Row.init gameWidth gameHeight squareSize squareSpacing)
   in
-    Model gameWidth gameHeight squareSize rows
+    Model gameWidth gameHeight squareSize squareSpacing rows (gameHeight - 1) (gameWidth - 1)
 
 
 -- UPDATE
 
-type Action = NoOp
+type Action
+  = MoveLeft
+  | MoveRight
 
 
 update : Action -> Model -> Model
 update action model =
-  model
+  case action of
+    MoveLeft ->
+      let
+        maybeRow = Array.get model.emptySquareRow model.rows
+        row = Maybe.withDefault (Row.empty model.gameWidth) maybeRow
+        newRow = Row.update Row.MoveLeft row
+        newRows = Array.set model.emptySquareRow newRow model.rows
+      in
+        { model |
+            rows <- newRows
+          , emptySquareColumn <- model.emptySquareColumn - 1
+        }
+
+    MoveRight ->
+      let
+        maybeRow = Array.get model.emptySquareRow model.rows
+        row = Maybe.withDefault (Row.empty model.gameWidth) maybeRow
+        newRow = Row.update Row.MoveRight row
+        newRows = Array.set model.emptySquareRow newRow model.rows
+      in
+        { model |
+            rows <- newRows
+          , emptySquareColumn <- model.emptySquareColumn - 1
+        }
 
 
 -- VIEW

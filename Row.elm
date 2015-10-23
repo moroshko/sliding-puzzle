@@ -1,4 +1,4 @@
-module Row (Model, init, Action, update, view) where
+module Row (Model, init, empty, Action(..), update, view) where
 
 import Array exposing (Array)
 import Graphics.Collage exposing (Form)
@@ -25,14 +25,64 @@ init gameWidth gameHeight squareSize squareSpacing row =
     Array.initialize gameWidth squareCreator
 
 
+empty : Int -> Model
+empty gameWidth =
+  Array.initialize gameWidth (\_ -> Nothing)
+
+
 -- UPDATE
 
-type Action = NoOp
+type Action
+  = MoveLeft
+  | MoveRight
+
+
+moveLeft : List (Maybe Square.Model) -> List (Maybe Square.Model)
+moveLeft list =
+  case list of
+    Nothing :: Just square :: rest ->
+      let
+        newSquare =
+          square
+            |> Square.update Square.MoveLeft
+            |> Just
+      in
+        newSquare :: Nothing :: rest
+
+    square :: rest ->
+      square :: moveLeft rest
+
+
+moveRight : List (Maybe Square.Model) -> List (Maybe Square.Model)
+moveRight list =
+  case list of
+    Just square :: Nothing :: rest ->
+      let
+        newSquare =
+          square
+            |> Square.update Square.MoveRight
+            |> Just
+      in
+        Nothing :: newSquare :: rest
+
+    square :: rest ->
+      square :: moveRight rest
 
 
 update : Action -> Model -> Model
 update action model =
-  model
+  case action of
+    MoveLeft ->
+      model
+        |> Array.toList
+        |> moveLeft
+        |> Array.fromList
+
+    MoveRight ->
+      model
+        |> Array.toList
+        |> moveRight
+        |> Array.fromList
 
 
 -- VIEW

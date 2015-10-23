@@ -1,4 +1,4 @@
-module Square (Model, init, Action, update, view) where
+module Square (Model, init, Action(..), update, view) where
 
 import Graphics.Collage exposing (Form)
 import Text
@@ -25,26 +25,27 @@ init gameWidth gameHeight size spacing name row column =
 
 -- UPDATE
 
-type Action = MoveLeft | MoveRight | MoveUp | MoveDown
+type Action
+  = MoveLeft
+  | MoveRight
+  | MoveUp
+  | MoveDown
 
 
 update : Action -> Model -> Model
 update action model =
-  model
-{--
   case action of
     MoveLeft ->
-      { model | x <- model.x - 1 }
+      { model | column <- model.column - 1 }
 
     MoveRight ->
-      { model | x <- model.x + 1 }
+      { model | column <- model.column + 1 }
 
     MoveUp ->
-      { model | y <- model.y - 1 }
+      { model | row <- model.row - 1 }
 
     MoveDown ->
-      { model | y <- model.y + 1 }
---}
+      { model | row <- model.row + 1 }
 
 
 -- VIEW
