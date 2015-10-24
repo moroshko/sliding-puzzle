@@ -3,6 +3,7 @@ module Board (Model, init, Action(..), update, view) where
 import Array exposing (Array)
 import Graphics.Collage exposing (Form)
 import Color
+import Utils
 import Row
 
 
@@ -41,9 +42,8 @@ update action model =
   case action of
     MoveLeft ->
       let
-        maybeRow = Array.get model.emptySquareRow model.rows
-        row = Maybe.withDefault (Row.empty model.gameWidth) maybeRow
-        newRow = Row.update Row.MoveLeft row
+        rowToMove = Utils.getArrayItem model.emptySquareRow model.rows
+        newRow = Row.update Row.MoveLeft rowToMove
         newRows = Array.set model.emptySquareRow newRow model.rows
       in
         { model |
@@ -53,9 +53,8 @@ update action model =
 
     MoveRight ->
       let
-        maybeRow = Array.get model.emptySquareRow model.rows
-        row = Maybe.withDefault (Row.empty model.gameWidth) maybeRow
-        newRow = Row.update Row.MoveRight row
+        rowToMove = Utils.getArrayItem model.emptySquareRow model.rows
+        newRow = Row.update Row.MoveRight rowToMove
         newRows = Array.set model.emptySquareRow newRow model.rows
       in
         { model |

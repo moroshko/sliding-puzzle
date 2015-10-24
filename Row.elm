@@ -1,4 +1,4 @@
-module Row (Model, init, empty, Action(..), update, view) where
+module Row (Model, init, Action(..), update, view) where
 
 import Array exposing (Array)
 import Graphics.Collage exposing (Form)
@@ -23,11 +23,6 @@ init gameWidth gameHeight squareSize squareSpacing row =
         else Just (Square.init gameWidth gameHeight squareSize squareSpacing (name column) row column)
   in
     Array.initialize gameWidth squareCreator
-
-
-empty : Int -> Model
-empty gameWidth =
-  Array.initialize gameWidth (\_ -> Nothing)
 
 
 -- UPDATE
