@@ -2,7 +2,6 @@ import Graphics.Element exposing (Element)
 import Graphics.Collage
 import Window
 import Keyboard
-import Debug
 import Board
 
 
@@ -26,29 +25,24 @@ type Action
   | ArrowUp
   | ArrowDown
 
-{--
-canMove : Model -> Action -> Bool
-canMove model action =
-  case action of
-    ArrowLeft -> model.emptySquareColumn < model.gameWidth - 1
-    ArrowRight -> model.emptySquareColumn > 0
-    ArrowUp -> model.emptySquareRow < model.gameHeight - 1
-    ArrowDown -> model.emptySquareRow > 0
-    _ -> False
-
---}
 
 update : Action -> Model -> Model
 update action model =
-  model
+  case action of
+    ArrowLeft ->
+      model |> Board.update Board.MoveLeft
 
-{--
-  let
-    _ = Debug.log "action" action
-    _ = Debug.log "can move" (canMove model action)
-  in
-    model
---}
+    ArrowRight ->
+      model |> Board.update Board.MoveRight
+
+    ArrowUp ->
+      model |> Board.update Board.MoveUp
+
+    ArrowDown ->
+      model |> Board.update Board.MoveDown
+    
+    _ ->
+      model
 
 
 -- VIEW

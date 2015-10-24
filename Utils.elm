@@ -1,13 +1,12 @@
-module Utils (getArrayItem) where
+module Utils (unsafeExtract) where
 
-import Array exposing (Array)
 import Debug
 
-getArrayItem : Int -> Array a -> a
-getArrayItem index array =
-  case Array.get index array of
-    Just item ->
-      item
 
+unsafeExtract : Maybe a -> a
+unsafeExtract maybe =
+  case maybe of
+    Just a ->
+      a
     _ ->
-      Debug.crash ((toString array) ++ " doesn't have item at index " ++ (toString index))
+      Debug.crash "unsafeExtract failed"
