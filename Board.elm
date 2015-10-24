@@ -14,9 +14,9 @@ type alias Model =
   , gameHeight : Int
   , squareSize : Int
   , squareSpacing : Int
-  , rows : Array Row.Model
   , emptySquareRow : Int
   , emptySquareColumn : Int
+  , rows : Array Row.Model
   }
 
 
@@ -25,9 +25,9 @@ init gameWidth gameHeight squareSize squareSpacing =
   let
     rows =
       Array.initialize gameHeight identity
-        |> Array.map (Row.init gameWidth gameHeight squareSize squareSpacing)
+        |> Array.map (Row.init gameWidth gameHeight squareSize squareSpacing (gameHeight - 1) (gameWidth - 1))
   in
-    Model gameWidth gameHeight squareSize squareSpacing rows (gameHeight - 1) (gameWidth - 1)
+    Model gameWidth gameHeight squareSize squareSpacing (gameHeight - 1) (gameWidth - 1) rows
 
 
 -- UPDATE

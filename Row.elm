@@ -11,14 +11,14 @@ type alias Model =
   Array (Maybe Square.Model)
 
 
-init : Int -> Int -> Int -> Int -> Int -> Model
-init gameWidth gameHeight squareSize squareSpacing row =
+init : Int -> Int -> Int -> Int -> Int -> Int -> Int -> Model
+init gameWidth gameHeight squareSize squareSpacing emptySquareRow emptySquareColumn row =
   let
     name column =
       gameWidth * row + column + 1 |> toString
 
     squareCreator column =
-      if row == gameHeight - 1 && column == gameWidth - 1
+      if row == emptySquareRow && column == emptySquareColumn
         then Nothing
         else Just (Square.init gameWidth gameHeight squareSize squareSpacing (name column) row column)
   in
