@@ -1,5 +1,6 @@
-module Utils (unsafeExtract) where
+module Utils (unsafeExtract, randomListItem) where
 
+import Random exposing (Seed)
 import Debug
 
 
@@ -10,3 +11,15 @@ unsafeExtract maybe =
       a
     _ ->
       Debug.crash "unsafeExtract failed"
+
+
+randomListItem : Seed -> List a -> (a, Seed)
+randomListItem seed list =
+  let
+    gen = Random.int 0 ((List.length list) - 1)
+    (randomIndex, newSeed) = Random.generate gen seed
+    randomItem = List.drop randomIndex list
+      |> List.head
+      |> unsafeExtract
+  in
+    (randomItem, newSeed)

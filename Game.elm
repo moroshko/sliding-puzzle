@@ -1,7 +1,9 @@
+import Html exposing (Html, div, button, text)
 import Graphics.Element exposing (Element)
 import Graphics.Collage
-import Window
 import Keyboard
+import Random
+import Window
 import Board
 
 
@@ -13,7 +15,8 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-  Board.init 4 3 100 1
+  Board.init 4 4 100 1
+    |> Board.update (Board.Shuffle (Random.initialSeed 2) 10000)
 
 
 -- UPDATE
@@ -47,9 +50,12 @@ update action model =
 
 -- VIEW
 
-view : (Int, Int) -> Model -> Element
+view : (Int, Int) -> Model -> Html
 view (windowWidth, windowHeight) model =
-  Graphics.Collage.collage windowWidth windowHeight (Board.view model)
+  div [ ]
+    [ {--button [ ] [ text "Randomize" ]
+    , --}Html.fromElement (Graphics.Collage.collage windowWidth windowHeight (Board.view model))
+    ]
 
 
 -- SIGNALS
@@ -81,6 +87,6 @@ model =
 
 -- MAIN
 
-main : Signal Element
+main : Signal Html
 main =
   Signal.map2 view Window.dimensions model

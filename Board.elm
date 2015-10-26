@@ -3,6 +3,7 @@ module Board (Model, init, Action(..), update, view) where
 import Graphics.Collage exposing (Form)
 import Array exposing (Array)
 import Color exposing (Color)
+import Random exposing (Seed)
 import Dict exposing (Dict)
 import Text
 import Utils
@@ -11,7 +12,7 @@ import Utils
 -- MODEL
 
 type alias Tile =
-  { name : String
+  { text : String
   , color : Color
   }
 
@@ -34,10 +35,10 @@ init boardWidth boardHeight tileSize tileSpacing =
     
     createTile row column =
       let
-        name = boardWidth * row + column + 1 |> toString
+        text = boardWidth * row + column + 1 |> toString
         color = Color.grey
       in
-        Tile name color
+        Tile text color
 
     addTile row column =
       Dict.insert (row, column) (createTile row column)
@@ -57,13 +58,17 @@ type Action
   | MoveRight
   | MoveUp
   | MoveDown
+  | Shuffle Seed Int
+
+
+moves : List Action
+moves = [ MoveLeft, MoveRight, MoveUp, MoveDown ]
 
 
 emptyAfter : Action -> Model -> (Int, Int)
 emptyAfter action model =
   let
-    row = fst model.empty
-    column = snd model.empty
+    (row, column) = model.empty
   in
     case action of
       MoveLeft ->
@@ -82,17 +87,58 @@ emptyAfter action model =
         (row, column)
 
 
+canMove : Model -> Action -> Bool
+canMove model action =
+  let
+    (row, column) = model.empty
+  in
+    case action of
+      MoveLeft ->
+        column < model.boardWidth - 1
+
+      MoveRight ->
+        column > 0
+
+      MoveUp ->
+        row < model.boardHeight - 1
+
+      MoveDown ->
+        row > 0
+
+      _ ->
+        False
+
+
+makeRandomMove : (Model, Seed) -> (Model, Seed)
+makeRandomMove (model, seed) =
+  let
+    (randomMove, newSeed) = moves
+      |> List.filter (canMove model)
+      |> Utils.randomListItem seed
+  in
+    (update randomMove model, newSeed)
+
+
 update : Action -> Model -> Model
 update action model =
-  let
-    newEmpty = emptyAfter action model
-    tileToMove = Dict.get newEmpty model.tiles |> Utils.unsafeExtract
-    newTiles = Dict.insert model.empty tileToMove model.tiles
-  in
-    { model |
-        tiles <- newTiles
-      , empty <- newEmpty
-    }
+  case action of
+    Shuffle seed times ->
+      let
+        (newModel, newSeed) =
+          List.foldl (\_ modelSeed -> makeRandomMove modelSeed) (model, seed) [1..times]
+      in
+        newModel
+
+    _ ->
+      let
+        newEmpty = emptyAfter action model
+        tileToMove = Dict.get newEmpty model.tiles |> Utils.unsafeExtract
+        newTiles = Dict.insert model.empty tileToMove model.tiles
+      in
+        { model |
+            tiles <- newTiles
+          , empty <- newEmpty
+        }
 
 
 -- VIEW
@@ -128,7 +174,7 @@ renderTile model row column =
         [ Graphics.Collage.square (toFloat size)
             |> Graphics.Collage.filled tile.color
             |> Graphics.Collage.move (toFloat dx, toFloat dy),
-          Text.fromString tile.name
+          Text.fromString tile.text
             |> Text.monospace
             |> Text.height (toFloat textSize)
             |> Graphics.Collage.text
