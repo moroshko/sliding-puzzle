@@ -12,7 +12,8 @@ import Utils
 -- MODEL
 
 type alias Tile =
-  { text : String
+  { id : Int
+  , text : String
   , color : Color
   }
 
@@ -37,10 +38,11 @@ init seed boardWidth boardHeight tileSize tileSpacing =
     
     createTile row column =
       let
-        text = boardWidth * row + column + 1 |> toString
+        id = boardWidth * row + column + 1
+        text = id |> toString
         color = Color.grey
       in
-        Tile text color
+        Tile id text color
 
     addTile row column =
       Dict.insert (row, column) (createTile row column)
