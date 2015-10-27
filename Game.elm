@@ -1,3 +1,5 @@
+module Game where
+
 import Html exposing (Html, div, button, text)
 import Graphics.Element exposing (Element)
 import Graphics.Collage
@@ -16,7 +18,7 @@ type alias Model =
 initialModel : Model
 initialModel =
   Board.init 4 4 100 1
-    |> Board.update (Board.Shuffle (Random.initialSeed 2) 10000)
+    |> Board.update (Board.Shuffle (Random.initialSeed initialSeed) 10000)
 
 
 -- UPDATE
@@ -56,6 +58,11 @@ view (windowWidth, windowHeight) model =
     [ {--button [ ] [ text "Randomize" ]
     , --}Html.fromElement (Graphics.Collage.collage windowWidth windowHeight (Board.view model))
     ]
+
+
+-- PORTS
+
+port initialSeed : Int
 
 
 -- SIGNALS
