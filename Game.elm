@@ -33,16 +33,16 @@ update : Action -> Model -> Model
 update action model =
   case action of
     ArrowLeft ->
-      model |> Board.update Board.MoveLeft
+      model |> Board.update (Board.Move Board.Left)
 
     ArrowRight ->
-      model |> Board.update Board.MoveRight
+      model |> Board.update (Board.Move Board.Right)
 
     ArrowUp ->
-      model |> Board.update Board.MoveUp
+      model |> Board.update (Board.Move Board.Up)
 
     ArrowDown ->
-      model |> Board.update Board.MoveDown
+      model |> Board.update (Board.Move Board.Down)
     
     _ ->
       model

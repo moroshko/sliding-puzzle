@@ -1,4 +1,4 @@
-module Board (Model, init, Action(..), update, view) where
+module Board (Model, init, Direction(..), Action(..), update, view) where
 
 import Graphics.Collage exposing (Form)
 import Array exposing (Array)
@@ -53,56 +53,55 @@ init boardWidth boardHeight tileSize tileSpacing =
 
 -- UPDATE
 
+type Direction = Left | Right | Up | Down
+
 type Action
-  = MoveLeft
-  | MoveRight
-  | MoveUp
-  | MoveDown
+  = Move Direction
   | Shuffle Seed Int
 
 
-moves : List Action
-moves = [ MoveLeft, MoveRight, MoveUp, MoveDown ]
+directions : List Direction
+directions = [ Left, Right, Up, Down ]
 
 
-emptyAfter : Action -> Model -> (Int, Int)
-emptyAfter action model =
+emptyAfterMove : Direction -> Model -> (Int, Int)
+emptyAfterMove direction model =
   let
     (row, column) = model.empty
   in
-    case action of
-      MoveLeft ->
+    case direction of
+      Left ->
         (row, column + 1 |> min (model.boardWidth - 1))
 
-      MoveRight ->
+      Right ->
         (row, column - 1 |> max 0)
 
-      MoveUp ->
+      Up ->
         (row + 1 |> min (model.boardHeight - 1), column)
 
-      MoveDown ->
+      Down ->
         (row - 1 |> max 0, column)
 
       _ ->
         (row, column)
 
 
-canMove : Model -> Action -> Bool
-canMove model action =
+canMove : Model -> Direction -> Bool
+canMove model direction =
   let
     (row, column) = model.empty
   in
-    case action of
-      MoveLeft ->
+    case direction of
+      Left ->
         column < model.boardWidth - 1
 
-      MoveRight ->
+      Right ->
         column > 0
 
-      MoveUp ->
+      Up ->
         row < model.boardHeight - 1
 
-      MoveDown ->
+      Down ->
         row > 0
 
       _ ->
@@ -112,16 +111,27 @@ canMove model action =
 makeRandomMove : (Model, Seed) -> (Model, Seed)
 makeRandomMove (model, seed) =
   let
-    (randomMove, newSeed) = moves
+    (randomDirection, newSeed) = directions
       |> List.filter (canMove model)
       |> Utils.randomListItem seed
   in
-    (update randomMove model, newSeed)
+    (update (Move randomDirection) model, newSeed)
 
 
 update : Action -> Model -> Model
 update action model =
   case action of
+    Move direction ->
+      let
+        newEmpty = emptyAfterMove direction model
+        tileToMove = Dict.get newEmpty model.tiles |> Utils.unsafeExtract
+        newTiles = Dict.insert model.empty tileToMove model.tiles
+      in
+        { model |
+            tiles <- newTiles
+          , empty <- newEmpty
+        }
+
     Shuffle seed times ->
       let
         (newModel, newSeed) =
@@ -130,15 +140,7 @@ update action model =
         newModel
 
     _ ->
-      let
-        newEmpty = emptyAfter action model
-        tileToMove = Dict.get newEmpty model.tiles |> Utils.unsafeExtract
-        newTiles = Dict.insert model.empty tileToMove model.tiles
-      in
-        { model |
-            tiles <- newTiles
-          , empty <- newEmpty
-        }
+      model
 
 
 -- VIEW
