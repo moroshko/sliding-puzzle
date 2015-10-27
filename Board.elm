@@ -17,7 +17,8 @@ type alias Tile =
   }
 
 type alias Model =
-  { boardWidth : Int
+  { seed : Seed
+  , boardWidth : Int
   , boardHeight : Int
   , tileSize : Int
   , tileSpacing : Int
@@ -26,9 +27,10 @@ type alias Model =
   }
 
 
-init : Int -> Int -> Int -> Int -> Model
-init boardWidth boardHeight tileSize tileSpacing =
+init : Int -> Int -> Int -> Int -> Int -> Model
+init seed boardWidth boardHeight tileSize tileSpacing =
   let
+    initialSeed = Random.initialSeed seed
     lastRowIndex = boardHeight - 1
     lastColumnIndex = boardWidth - 1
     empty = (lastRowIndex, lastColumnIndex)
@@ -48,7 +50,7 @@ init boardWidth boardHeight tileSize tileSpacing =
     
     tiles = List.foldl addRow Dict.empty [0..lastRowIndex]
   in
-    Model boardWidth boardHeight tileSize tileSpacing tiles empty
+    Model initialSeed boardWidth boardHeight tileSize tileSpacing tiles empty
 
 
 -- UPDATE
@@ -57,7 +59,7 @@ type Direction = Left | Right | Up | Down
 
 type Action
   = Move Direction
-  | Shuffle Seed Int
+  | Shuffle Int
 
 
 directions : List Direction
@@ -108,14 +110,15 @@ canMove model direction =
         False
 
 
-makeRandomMove : (Model, Seed) -> (Model, Seed)
-makeRandomMove (model, seed) =
+makeRandomMove : Model -> Model
+makeRandomMove model =
   let
     (randomDirection, newSeed) = directions
       |> List.filter (canMove model)
-      |> Utils.randomListItem seed
+      |> Utils.randomListItem model.seed
+    modelAfterMove = update (Move randomDirection) model
   in
-    (update (Move randomDirection) model, newSeed)
+    { modelAfterMove | seed <- newSeed }
 
 
 update : Action -> Model -> Model
@@ -132,12 +135,8 @@ update action model =
           , empty <- newEmpty
         }
 
-    Shuffle seed times ->
-      let
-        (newModel, newSeed) =
-          List.foldl (\_ modelSeed -> makeRandomMove modelSeed) (model, seed) [1..times]
-      in
-        newModel
+    Shuffle times ->
+      List.foldl (\_ model -> makeRandomMove model) model [1..times]
 
     _ ->
       model

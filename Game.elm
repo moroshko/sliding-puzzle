@@ -17,8 +17,8 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-  Board.init 4 4 100 1
-    |> Board.update (Board.Shuffle (Random.initialSeed initialSeed) 10000)
+  Board.init initialSeed 4 4 100 1
+    |> Board.update (Board.Shuffle 10000)
 
 
 -- UPDATE
