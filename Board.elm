@@ -38,8 +38,8 @@ init seed boardWidth boardHeight tileSize tileSpacing =
     
     createTile row column =
       let
-        id = boardWidth * row + column + 1
-        text = id |> toString
+        id = boardWidth * row + column
+        text = id + 1 |> toString
         color = Color.grey
       in
         Tile id text color
