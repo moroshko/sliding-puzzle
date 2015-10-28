@@ -25,6 +25,7 @@ type alias Model =
   , tileSpacing : Int
   , tiles : Dict (Int, Int) Tile
   , empty : (Int, Int)
+  , isSolved : Bool
   }
 
 
@@ -51,8 +52,9 @@ init seed boardWidth boardHeight tileSize tileSpacing =
       List.foldl (addTile row) dict [0..lastColumnIndex] 
     
     tiles = List.foldl addRow Dict.empty [0..lastRowIndex]
+    model = Model initialSeed boardWidth boardHeight tileSize tileSpacing tiles empty False
   in
-    Model initialSeed boardWidth boardHeight tileSize tileSpacing tiles empty
+    { model | isSolved <- allTilesInPlace model }
 
 
 -- UPDATE
@@ -64,8 +66,15 @@ type Action
   | Shuffle Int
 
 
-directions : List Direction
-directions = [ Left, Right, Up, Down ]
+allTilesInPlace : Model -> Bool
+allTilesInPlace model =
+  let
+    tileInPlace (row, column) tile =
+      if (row, column) == model.empty
+        then True
+        else model.boardWidth * row + column == tile.id
+  in
+    Dict.foldr (\coords tile result -> result && tileInPlace coords tile) True model.tiles
 
 
 emptyAfterMove : Direction -> Model -> (Int, Int)
@@ -112,6 +121,10 @@ canMove model direction =
         False
 
 
+directions : List Direction
+directions = [ Left, Right, Up, Down ]
+
+
 makeRandomMove : Model -> Model
 makeRandomMove model =
   let
@@ -128,14 +141,16 @@ update action model =
   case action of
     Move direction ->
       let
-        newEmpty = emptyAfterMove direction model
-        tileToMove = Dict.get newEmpty model.tiles |> Utils.unsafeExtract
-        newTiles = Dict.insert model.empty tileToMove model.tiles
+        empty = emptyAfterMove direction model
+        tileToMove = Dict.get empty model.tiles |> Utils.unsafeExtract
+        tiles = Dict.insert model.empty tileToMove model.tiles
+        newModel =
+          { model |
+              tiles <- tiles
+            , empty <- empty
+          }
       in
-        { model |
-            tiles <- newTiles
-          , empty <- newEmpty
-        }
+        { newModel | isSolved <- allTilesInPlace newModel }
 
     Shuffle times ->
       List.foldl (\_ model -> makeRandomMove model) model [1..times]
@@ -151,7 +166,10 @@ renderBoard model =
   let
     boardWidth = model.boardWidth * model.tileSize
     boardHeight = model.boardHeight * model.tileSize
-    boardColor = Color.lightGrey
+    boardColor =
+      if model.isSolved
+        then Color.rgb 180 255 180
+        else Color.lightGrey
   in
     Graphics.Collage.rect (toFloat boardWidth) (toFloat boardHeight)
       |> Graphics.Collage.filled boardColor

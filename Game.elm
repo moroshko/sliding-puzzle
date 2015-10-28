@@ -17,8 +17,8 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-  Board.init initialSeed 4 4 100 1
-    |> Board.update (Board.Shuffle 10000)
+  Board.init initialSeed 3 3 100 1
+    |> Board.update (Board.Shuffle 100)
 
 
 -- UPDATE
@@ -55,8 +55,8 @@ update action model =
 view : (Int, Int) -> Model -> Html
 view (windowWidth, windowHeight) model =
   div [ ]
-    [ {--button [ ] [ text "Randomize" ]
-    , --}Html.fromElement (Graphics.Collage.collage windowWidth windowHeight (Board.view model))
+    [ {--button [ ] [ text "Shuffle" ]
+    , --}Html.fromElement (Graphics.Collage.collage windowWidth (windowHeight - 20) (Board.view model))
     ]
 
 
