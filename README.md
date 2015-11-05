@@ -4,7 +4,7 @@
 
 ```shell
 $ elm package install
-$ elm make Game.elm --output index.js
+$ elm make Game.elm --output app.js
 $ elm reactor
 ```
 

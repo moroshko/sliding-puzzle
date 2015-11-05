@@ -63,34 +63,35 @@ type Direction = Left | Right | Up | Down
 
 type Action
   = Move Direction
+  | MoveTile (Int, Int)
   | Shuffle Int
 
 
 allTilesInPlace : Model -> Bool
-allTilesInPlace model =
+allTilesInPlace { boardWidth, tiles, empty } =
   let
     tileInPlace (row, column) tile =
-      if (row, column) == model.empty
+      if (row, column) == empty
         then True
-        else model.boardWidth * row + column == tile.id
+        else boardWidth * row + column == tile.id
   in
-    Dict.foldr (\coords tile result -> result && tileInPlace coords tile) True model.tiles
+    Dict.foldr (\coords tile result -> result && tileInPlace coords tile) True tiles
 
 
 emptyAfterMove : Direction -> Model -> (Int, Int)
-emptyAfterMove direction model =
+emptyAfterMove direction { boardWidth, boardHeight, empty } =
   let
-    (row, column) = model.empty
+    (row, column) = empty
   in
     case direction of
       Left ->
-        (row, column + 1 |> min (model.boardWidth - 1))
+        (row, column + 1 |> min (boardWidth - 1))
 
       Right ->
         (row, column - 1 |> max 0)
 
       Up ->
-        (row + 1 |> min (model.boardHeight - 1), column)
+        (row + 1 |> min (boardHeight - 1), column)
 
       Down ->
         (row - 1 |> max 0, column)
@@ -100,19 +101,19 @@ emptyAfterMove direction model =
 
 
 canMove : Model -> Direction -> Bool
-canMove model direction =
+canMove { boardWidth, boardHeight, empty } direction =
   let
-    (row, column) = model.empty
+    (row, column) = empty
   in
     case direction of
       Left ->
-        column < model.boardWidth - 1
+        column < boardWidth - 1
 
       Right ->
         column > 0
 
       Up ->
-        row < model.boardHeight - 1
+        row < boardHeight - 1
 
       Down ->
         row > 0
@@ -126,31 +127,38 @@ directions = [ Left, Right, Up, Down ]
 
 
 makeRandomMove : Model -> Model
-makeRandomMove model =
+makeRandomMove ({ seed } as model) =
   let
-    (randomDirection, newSeed) = directions
+    (randomDirection, seed') = directions
       |> List.filter (canMove model)
-      |> Utils.randomListItem model.seed
+      |> Utils.randomListItem seed
     modelAfterMove = update (Move randomDirection) model
   in
-    { modelAfterMove | seed <- newSeed }
+    { modelAfterMove | seed <- seed' }
 
 
 update : Action -> Model -> Model
-update action model =
+update action ({ tiles, empty } as model) =
   case action of
     Move direction ->
       let
-        empty = emptyAfterMove direction model
-        tileToMove = Dict.get empty model.tiles |> Utils.unsafeExtract
-        tiles = Dict.insert model.empty tileToMove model.tiles
-        newModel =
+        empty' = emptyAfterMove direction model
+        tileToMove = Dict.get empty' tiles |> Utils.unsafeExtract
+        tiles' = Dict.insert empty tileToMove tiles
+        model' =
           { model |
-              tiles <- tiles
-            , empty <- empty
+              tiles <- tiles'
+            , empty <- empty'
           }
       in
-        { newModel | isSolved <- allTilesInPlace newModel }
+        { model' | isSolved <- allTilesInPlace model' }
+
+    MoveTile (row, column) ->
+      if | (row, column - 1) == empty -> update (Move Left) model
+         | (row, column + 1) == empty -> update (Move Right) model
+         | (row - 1, column) == empty -> update (Move Up) model
+         | (row + 1, column) == empty -> update (Move Down) model
+         | otherwise -> model
 
     Shuffle times ->
       List.foldl (\_ model -> makeRandomMove model) model [1..times]
@@ -162,40 +170,40 @@ update action model =
 -- VIEW
 
 renderBoard : Model -> Form
-renderBoard model =
+renderBoard { boardWidth, boardHeight, tileSize, isSolved } =
   let
-    boardWidth = model.boardWidth * model.tileSize
-    boardHeight = model.boardHeight * model.tileSize
+    boardWidth' = boardWidth * tileSize
+    boardHeight' = boardHeight * tileSize
     boardColor =
-      if model.isSolved
-        then Color.rgb 180 255 180
+      if isSolved
+        then Color.rgb 90 160 90
         else Color.lightGrey
   in
-    Graphics.Collage.rect (toFloat boardWidth) (toFloat boardHeight)
+    Graphics.Collage.rect (toFloat boardWidth') (toFloat boardHeight')
       |> Graphics.Collage.filled boardColor
 
 
 renderTile : Model -> Int -> Int -> List Form
-renderTile model row column =
-  if (row, column) == model.empty
+renderTile { boardWidth, boardHeight, tileSize, tileSpacing, tiles, empty } row column =
+  if (row, column) == empty
     then []
     else
       let
-        size = model.tileSize - 2 * model.tileSpacing
-        boardWidth = model.boardWidth * model.tileSize
-        boardHeight = model.boardHeight * model.tileSize
-        textSize = (model.tileSize - 2 * model.tileSpacing) // 2
+        size = tileSize - 2 * tileSpacing
+        boardWidth' = boardWidth * tileSize
+        boardHeight' = boardHeight * tileSize
+        textSize = (tileSize - 2 * tileSpacing) // 2
         textOffset = textSize // 5
 
-        dx = (size - boardWidth) // 2 + (column * model.tileSize) + model.tileSpacing
-        dy = (boardHeight - size) // 2 - (row * model.tileSize) - model.tileSpacing
+        dx = (size - boardWidth') // 2 + (column * tileSize) + tileSpacing
+        dy = (boardHeight' - size) // 2 - (row * tileSize) - tileSpacing
 
-        tile = Dict.get (row, column) model.tiles |> Utils.unsafeExtract
+        tile = Dict.get (row, column) tiles |> Utils.unsafeExtract
       in
         [ Graphics.Collage.square (toFloat size)
             |> Graphics.Collage.filled tile.color
-            |> Graphics.Collage.move (toFloat dx, toFloat dy),
-          Text.fromString tile.text
+            |> Graphics.Collage.move (toFloat dx, toFloat dy)
+        , Text.fromString tile.text
             |> Text.monospace
             |> Text.height (toFloat textSize)
             |> Graphics.Collage.text
@@ -204,19 +212,19 @@ renderTile model row column =
 
 
 renderRow : Model -> Int -> List Form
-renderRow model row =
+renderRow ({ boardWidth } as model) row =
   let
-    lastColumnIndex = model.boardWidth - 1
+    lastColumnIndex = boardWidth - 1
   in
     List.map (renderTile model row) [0..lastColumnIndex]
       |> List.concat
 
 
 view : Model -> List Form
-view model =
+view ({ boardHeight } as model) =
   let
     board = renderBoard model
-    lastRowIndex = model.boardHeight - 1
+    lastRowIndex = boardHeight - 1
     tiles = List.map (renderRow model) [0..lastRowIndex]
       |> List.concat
   in

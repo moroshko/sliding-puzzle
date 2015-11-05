@@ -6,6 +6,7 @@ import Graphics.Collage
 import Keyboard
 import Random
 import Window
+import Mouse
 import Board
 
 
@@ -17,8 +18,8 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-  Board.init initialSeed 3 3 100 1
-    |> Board.update (Board.Shuffle 100)
+  Board.init initialSeed 4 5 100 20
+    |> Board.update (Board.Shuffle 0)
 
 
 -- UPDATE
@@ -29,10 +30,11 @@ type Action
   | ArrowRight
   | ArrowUp
   | ArrowDown
+  | Click (Int, Int) (Int, Int)
 
 
 update : Action -> Model -> Model
-update action model =
+update action ({ boardWidth, boardHeight, tileSize } as model) =
   case action of
     ArrowLeft ->
       model |> Board.update (Board.Move Board.Left)
@@ -45,6 +47,21 @@ update action model =
 
     ArrowDown ->
       model |> Board.update (Board.Move Board.Down)
+
+    Click (clickX, clickY) (windowWidth, windowHeight) ->
+      let
+        boardTopLeftX = (windowWidth - boardWidth * tileSize) // 2
+        boardTopLeftY = (windowHeight - boardHeight * tileSize) // 2
+
+        dx = clickX - boardTopLeftX
+        dy = clickY - boardTopLeftY
+
+        row = dy // tileSize
+        column = dx // tileSize
+      in
+        if dx < 0 || row >= boardHeight || dy < 0 || column >= boardWidth
+          then model
+          else model |> Board.update (Board.MoveTile (row, column))
     
     _ ->
       model
@@ -52,12 +69,10 @@ update action model =
 
 -- VIEW
 
-view : (Int, Int) -> Model -> Html
+view : (Int, Int) -> Model -> Element
 view (windowWidth, windowHeight) model =
-  div [ ]
-    [ {--button [ ] [ text "Shuffle" ]
-    , --}Html.fromElement (Graphics.Collage.collage windowWidth (windowHeight - 20) (Board.view model))
-    ]
+  Board.view model
+    |> Graphics.Collage.collage windowWidth windowHeight
 
 
 -- PORTS
@@ -66,6 +81,12 @@ port initialSeed : Int
 
 
 -- SIGNALS
+
+clicks : Signal Action
+clicks =
+  Signal.map2 Click Mouse.position Window.dimensions
+    |> Signal.sampleOn Mouse.clicks
+
 
 arrows : Signal Action
 arrows =
@@ -84,7 +105,7 @@ arrows =
 
 input : Signal Action
 input =
-  arrows -- Will add mouse clicks later
+  Signal.merge arrows clicks
 
 
 model : Signal Model
@@ -94,6 +115,6 @@ model =
 
 -- MAIN
 
-main : Signal Html
+main : Signal Element
 main =
   Signal.map2 view Window.dimensions model
