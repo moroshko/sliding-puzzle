@@ -6,7 +6,7 @@ import Graphics.Collage
 import Keyboard
 import Random
 import Window
-import Mouse
+import Touch
 import Board
 
 
@@ -84,8 +84,12 @@ port initialSeed : Int
 
 clicks : Signal Action
 clicks =
-  Signal.map2 Click Mouse.position Window.dimensions
-    |> Signal.sampleOn Mouse.clicks
+  let
+    createClick { x, y } dimensions =
+      Click (x, y) dimensions
+  in
+    Signal.map2 createClick Touch.taps Window.dimensions
+      |> Signal.sampleOn Touch.taps
 
 
 arrows : Signal Action

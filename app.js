@@ -2183,9 +2183,9 @@ Elm.Game.make = function (_elm) {
    $Keyboard = Elm.Keyboard.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
-   $Mouse = Elm.Mouse.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
+   $Touch = Elm.Touch.make(_elm),
    $Window = Elm.Window.make(_elm);
    var initialSeed = Elm.Native.Port.make(_elm).inbound("initialSeed",
    "Int",
@@ -2249,10 +2249,22 @@ Elm.Game.make = function (_elm) {
              ,_0: a
              ,_1: b};
    });
-   var clicks = $Signal.sampleOn($Mouse.clicks)(A3($Signal.map2,
-   Click,
-   $Mouse.position,
-   $Window.dimensions));
+   var clicks = function () {
+      var createClick = F2(function (_v13,
+      dimensions) {
+         return function () {
+            return A2(Click,
+            {ctor: "_Tuple2"
+            ,_0: _v13.x
+            ,_1: _v13.y},
+            dimensions);
+         }();
+      });
+      return $Signal.sampleOn($Touch.taps)(A3($Signal.map2,
+      createClick,
+      $Touch.taps,
+      $Window.dimensions));
+   }();
    var ArrowDown = {ctor: "ArrowDown"};
    var ArrowUp = {ctor: "ArrowUp"};
    var ArrowRight = {ctor: "ArrowRight"};
@@ -4168,37 +4180,6 @@ Elm.Maybe.make = function (_elm) {
                        ,Just: Just
                        ,Nothing: Nothing};
    return _elm.Maybe.values;
-};
-Elm.Mouse = Elm.Mouse || {};
-Elm.Mouse.make = function (_elm) {
-   "use strict";
-   _elm.Mouse = _elm.Mouse || {};
-   if (_elm.Mouse.values)
-   return _elm.Mouse.values;
-   var _op = {},
-   _N = Elm.Native,
-   _U = _N.Utils.make(_elm),
-   _L = _N.List.make(_elm),
-   $moduleName = "Mouse",
-   $Basics = Elm.Basics.make(_elm),
-   $Native$Mouse = Elm.Native.Mouse.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
-   var clicks = $Native$Mouse.clicks;
-   var isDown = $Native$Mouse.isDown;
-   var position = $Native$Mouse.position;
-   var x = A2($Signal.map,
-   $Basics.fst,
-   position);
-   var y = A2($Signal.map,
-   $Basics.snd,
-   position);
-   _elm.Mouse.values = {_op: _op
-                       ,position: position
-                       ,x: x
-                       ,y: y
-                       ,isDown: isDown
-                       ,clicks: clicks};
-   return _elm.Mouse.values;
 };
 Elm.Native.Array = {};
 Elm.Native.Array.make = function(localRuntime) {
@@ -7589,50 +7570,6 @@ Elm.Native.List.make = function(localRuntime) {
 
 };
 
-Elm.Native = Elm.Native || {};
-Elm.Native.Mouse = {};
-Elm.Native.Mouse.make = function(localRuntime) {
-
-	localRuntime.Native = localRuntime.Native || {};
-	localRuntime.Native.Mouse = localRuntime.Native.Mouse || {};
-	if (localRuntime.Native.Mouse.values)
-	{
-		return localRuntime.Native.Mouse.values;
-	}
-
-	var NS = Elm.Native.Signal.make(localRuntime);
-	var Utils = Elm.Native.Utils.make(localRuntime);
-
-	var position = NS.input('Mouse.position', Utils.Tuple2(0,0));
-
-	var isDown = NS.input('Mouse.isDown', false);
-
-	var clicks = NS.input('Mouse.clicks', Utils.Tuple0);
-
-	var node = localRuntime.isFullscreen()
-		? document
-		: localRuntime.node;
-
-	localRuntime.addListener([clicks.id], node, 'click', function click() {
-		localRuntime.notify(clicks.id, Utils.Tuple0);
-	});
-	localRuntime.addListener([isDown.id], node, 'mousedown', function down() {
-		localRuntime.notify(isDown.id, true);
-	});
-	localRuntime.addListener([isDown.id], node, 'mouseup', function up() {
-		localRuntime.notify(isDown.id, false);
-	});
-	localRuntime.addListener([position.id], node, 'mousemove', function move(e) {
-		localRuntime.notify(position.id, Utils.getXY(e));
-	});
-
-	return localRuntime.Native.Mouse.values = {
-		position: position,
-		isDown: isDown,
-		clicks: clicks
-	};
-};
-
 Elm.Native.Port = {};
 Elm.Native.Port.make = function(localRuntime) {
 
@@ -9924,6 +9861,295 @@ Elm.Native.Text.make = function(localRuntime) {
 		toLine: toLine,
 		renderHtml: renderHtml
 	};
+};
+
+Elm.Native.Time = {};
+Elm.Native.Time.make = function(localRuntime)
+{
+
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Time = localRuntime.Native.Time || {};
+	if (localRuntime.Native.Time.values)
+	{
+		return localRuntime.Native.Time.values;
+	}
+
+	var NS = Elm.Native.Signal.make(localRuntime);
+	var Maybe = Elm.Maybe.make(localRuntime);
+
+
+	// FRAMES PER SECOND
+
+	function fpsWhen(desiredFPS, isOn)
+	{
+		var msPerFrame = 1000 / desiredFPS;
+		var ticker = NS.input('fps-' + desiredFPS, null);
+
+		function notifyTicker()
+		{
+			localRuntime.notify(ticker.id, null);
+		}
+
+		function firstArg(x, y)
+		{
+			return x;
+		}
+
+		// input fires either when isOn changes, or when ticker fires.
+		// Its value is a tuple with the current timestamp, and the state of isOn
+		var input = NS.timestamp(A3(NS.map2, F2(firstArg), NS.dropRepeats(isOn), ticker));
+
+		var initialState = {
+			isOn: false,
+			time: localRuntime.timer.programStart,
+			delta: 0
+		};
+
+		var timeoutId;
+
+		function update(input,state)
+		{
+			var currentTime = input._0;
+			var isOn = input._1;
+			var wasOn = state.isOn;
+			var previousTime = state.time;
+
+			if (isOn)
+			{
+				timeoutId = localRuntime.setTimeout(notifyTicker, msPerFrame);
+			}
+			else if (wasOn)
+			{
+				clearTimeout(timeoutId);
+			}
+
+			return {
+				isOn: isOn,
+				time: currentTime,
+				delta: (isOn && !wasOn) ? 0 : currentTime - previousTime
+			};
+		}
+
+		return A2(
+			NS.map,
+			function(state) { return state.delta; },
+			A3(NS.foldp, F2(update), update(input.value,initialState), input)
+		);
+	}
+
+
+	// EVERY
+
+	function every(t)
+	{
+		var ticker = NS.input('every-' + t, null);
+		function tellTime()
+		{
+			localRuntime.notify(ticker.id, null);
+		}
+		var clock = A2( NS.map, fst, NS.timestamp(ticker) );
+		setInterval(tellTime, t);
+		return clock;
+	}
+
+
+	function fst(pair)
+	{
+		return pair._0;
+	}
+
+
+	function read(s)
+	{
+		var t = Date.parse(s);
+		return isNaN(t) ? Maybe.Nothing : Maybe.Just(t);
+	}
+
+	return localRuntime.Native.Time.values = {
+		fpsWhen: F2(fpsWhen),
+		every: every,
+		toDate: function(t) { return new window.Date(t); },
+		read: read
+	};
+
+};
+
+Elm.Native = Elm.Native || {};
+Elm.Native.Touch = {};
+Elm.Native.Touch.make = function(localRuntime) {
+
+    localRuntime.Native = localRuntime.Native || {};
+    localRuntime.Native.Touch = localRuntime.Native.Touch || {};
+    if (localRuntime.Native.Touch.values)
+    {
+        return localRuntime.Native.Touch.values;
+    }
+
+    var Signal = Elm.Signal.make(localRuntime);
+    var NS = Elm.Native.Signal.make(localRuntime);
+    var List = Elm.Native.List.make(localRuntime);
+    var Utils = Elm.Native.Utils.make(localRuntime);
+
+    function Dict() {
+        this.keys = [];
+        this.values = [];
+
+        this.insert = function(key,value) {
+            this.keys.push(key);
+            this.values.push(value);
+        };
+        this.lookup = function(key) {
+            var i = this.keys.indexOf(key)
+            return i >= 0 ? this.values[i] : {x:0,y:0,t:0};
+        };
+        this.remove = function(key) {
+            var i = this.keys.indexOf(key);
+            if (i < 0) return;
+            var t = this.values[i];
+            this.keys.splice(i,1);
+            this.values.splice(i,1);
+            return t;
+        };
+        this.clear = function() {
+            this.keys = [];
+            this.values = [];
+        };
+    }
+
+    var root = NS.input('touch', []),
+    tapTime = 500,
+    hasTap = false,
+    tap = {_:{},x:0,y:0},
+    dict = new Dict();
+
+    function touch(t) {
+        var r = dict.lookup(t.identifier);
+        var point = Utils.getXY(t);
+        return {
+            _ : {},
+            id: t.identifier,
+            x : point._0,
+            y : point._1,
+            x0: r.x,
+            y0: r.y,
+            t0: r.t
+         };
+    }
+
+    var node = localRuntime.isFullscreen()
+        ? document
+        : localRuntime.node;
+
+    function start(e) {
+        var point = Utils.getXY(e);
+        dict.insert(e.identifier, {
+            x: point._0,
+            y: point._1,
+            t: localRuntime.timer.now()
+        });
+    }
+    function end(e) {
+        var t = dict.remove(e.identifier);
+        if (localRuntime.timer.now() - t.t < tapTime)
+        {
+            hasTap = true;
+            tap = {
+                _: {},
+                x: t.x,
+                y: t.y
+            };
+        }
+    }
+
+    function listen(name, f) {
+        function update(e) {
+            for (var i = e.changedTouches.length; i--; ) {
+                f(e.changedTouches[i]);
+            }
+            var ts = new Array(e.touches.length);
+            for (var i = e.touches.length; i--; ) {
+                ts[i] = touch(e.touches[i]);
+            }
+            localRuntime.notify(root.id, ts);
+            e.preventDefault();
+        }
+        localRuntime.addListener([root.id], node, name, update);
+    }
+
+    listen("touchstart", start);
+    listen("touchmove", function(_){});
+    listen("touchend", end);
+    listen("touchcancel", end);
+    listen("touchleave", end);
+
+    var mouseID = -1;
+    function move(e) {
+        var point = Utils.getXY(e);
+        for (var i = root.value.length; i--; ) {
+            if (root.value[i].id === mouseID)
+            {
+                root.value[i].x = point._0;
+                root.value[i].y = point._1;
+                localRuntime.notify(root.id, root.value);
+                break;
+            }
+        }
+    }
+    localRuntime.addListener([root.id], node, "mousedown", function down(e) {
+        node.addEventListener("mousemove", move);
+        e.identifier = mouseID;
+        start(e);
+        root.value.push(touch(e));
+        localRuntime.notify(root.id, root.value);
+    });
+    localRuntime.addListener([root.id], document, "mouseup", function up(e) {
+        node.removeEventListener("mousemove", move);
+        e.identifier = mouseID;
+        end(e);
+        for (var i = root.value.length; i--; ) {
+            if (root.value[i].id === mouseID)
+            {
+                root.value.splice(i, 1);
+                --mouseID;
+                break;
+            }
+        }
+        localRuntime.notify(root.id, root.value);
+    });
+    localRuntime.addListener([root.id], node, "blur", function blur(e) {
+        node.removeEventListener("mousemove", move);
+        if (root.value.length > 0)
+        {
+            localRuntime.notify(root.id, []);
+            --mouseID;
+        }
+        dict.clear();
+    });
+
+    function dependency(f) {
+        var sig = A2( Signal.map, f, root );
+        root.defaultNumberOfKids += 1;
+        sig.defaultNumberOfKids = 0;
+        return sig;
+    }
+
+    var touches = dependency(List.fromArray);
+
+    var taps = function() {
+        var sig = dependency(function(_) { return tap; });
+        sig.defaultNumberOfKids = 1;
+        function pred(_) {
+            var b = hasTap;
+            hasTap = false;
+            return b;
+        }
+        var sig2 = A3( Signal.filter, pred, {_:{},x:0,y:0}, sig);
+        sig2.defaultNumberOfKids = 0;
+        return sig2;
+    }();
+
+    return localRuntime.Native.Touch.values = { touches: touches, taps: taps };
+
 };
 
 Elm.Native.Transform2D = {};
@@ -13255,6 +13481,121 @@ Elm.Text.make = function (_elm) {
                       ,Over: Over
                       ,Through: Through};
    return _elm.Text.values;
+};
+Elm.Time = Elm.Time || {};
+Elm.Time.make = function (_elm) {
+   "use strict";
+   _elm.Time = _elm.Time || {};
+   if (_elm.Time.values)
+   return _elm.Time.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Time",
+   $Basics = Elm.Basics.make(_elm),
+   $Native$Signal = Elm.Native.Signal.make(_elm),
+   $Native$Time = Elm.Native.Time.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var delay = $Native$Signal.delay;
+   var since = F2(function (time,
+   signal) {
+      return function () {
+         var stop = A2($Signal.map,
+         $Basics.always(-1),
+         A2(delay,time,signal));
+         var start = A2($Signal.map,
+         $Basics.always(1),
+         signal);
+         var delaydiff = A3($Signal.foldp,
+         F2(function (x,y) {
+            return x + y;
+         }),
+         0,
+         A2($Signal.merge,start,stop));
+         return A2($Signal.map,
+         F2(function (x,y) {
+            return !_U.eq(x,y);
+         })(0),
+         delaydiff);
+      }();
+   });
+   var timestamp = $Native$Signal.timestamp;
+   var every = $Native$Time.every;
+   var fpsWhen = $Native$Time.fpsWhen;
+   var fps = function (targetFrames) {
+      return A2(fpsWhen,
+      targetFrames,
+      $Signal.constant(true));
+   };
+   var inMilliseconds = function (t) {
+      return t;
+   };
+   var millisecond = 1;
+   var second = 1000 * millisecond;
+   var minute = 60 * second;
+   var hour = 60 * minute;
+   var inHours = function (t) {
+      return t / hour;
+   };
+   var inMinutes = function (t) {
+      return t / minute;
+   };
+   var inSeconds = function (t) {
+      return t / second;
+   };
+   _elm.Time.values = {_op: _op
+                      ,millisecond: millisecond
+                      ,second: second
+                      ,minute: minute
+                      ,hour: hour
+                      ,inMilliseconds: inMilliseconds
+                      ,inSeconds: inSeconds
+                      ,inMinutes: inMinutes
+                      ,inHours: inHours
+                      ,fps: fps
+                      ,fpsWhen: fpsWhen
+                      ,every: every
+                      ,timestamp: timestamp
+                      ,delay: delay
+                      ,since: since};
+   return _elm.Time.values;
+};
+Elm.Touch = Elm.Touch || {};
+Elm.Touch.make = function (_elm) {
+   "use strict";
+   _elm.Touch = _elm.Touch || {};
+   if (_elm.Touch.values)
+   return _elm.Touch.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Touch",
+   $Native$Touch = Elm.Native.Touch.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Time = Elm.Time.make(_elm);
+   var taps = $Native$Touch.taps;
+   var touches = $Native$Touch.touches;
+   var Touch = F6(function (a,
+   b,
+   c,
+   d,
+   e,
+   f) {
+      return {_: {}
+             ,id: c
+             ,t0: f
+             ,x: a
+             ,x0: d
+             ,y: b
+             ,y0: e};
+   });
+   _elm.Touch.values = {_op: _op
+                       ,touches: touches
+                       ,taps: taps
+                       ,Touch: Touch};
+   return _elm.Touch.values;
 };
 Elm.Transform2D = Elm.Transform2D || {};
 Elm.Transform2D.make = function (_elm) {
