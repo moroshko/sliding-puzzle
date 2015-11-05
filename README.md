@@ -1,4 +1,4 @@
-# [Sliding Puzzle](http://moroshko.github.io/sliding-puzzle)
+# <a href="http://moroshko.github.io/sliding-puzzle" target="_blank">Sliding Puzzle</a>
 
 ## Development
 
