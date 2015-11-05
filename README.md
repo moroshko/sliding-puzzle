@@ -1,4 +1,4 @@
-# Sliding Puzzle
+# [Sliding Puzzle](http://moroshko.github.io/sliding-puzzle)
 
 ## Development
 
