@@ -1,4 +1,4 @@
-module Game where
+module App where
 
 import Html exposing (Html, div, button, text)
 import Graphics.Element exposing (Element)
@@ -8,6 +8,8 @@ import Random
 import Window
 import Touch
 import Board
+import Utils
+import Debug
 
 
 -- MODEL
@@ -18,8 +20,13 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-  Board.init initialSeed 3 3 100 1
-    |> Board.update (Board.Shuffle 100)
+  let
+    params = Utils.queryParams locationSearch
+    width = Utils.dictGetInt "width" 3 10 params
+    height = Utils.dictGetInt "height" 3 10 params
+  in
+    Board.init initialSeed width height 100 1
+      |> Board.update (Board.Shuffle 100)
 
 
 -- UPDATE
@@ -78,6 +85,8 @@ view (windowWidth, windowHeight) model =
 -- PORTS
 
 port initialSeed : Int
+
+port locationSearch : String
 
 
 -- SIGNALS

@@ -1,4 +1,185 @@
 var Elm = Elm || { Native: {} };
+Elm.App = Elm.App || {};
+Elm.App.make = function (_elm) {
+   "use strict";
+   _elm.App = _elm.App || {};
+   if (_elm.App.values)
+   return _elm.App.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "App",
+   $Basics = Elm.Basics.make(_elm),
+   $Board = Elm.Board.make(_elm),
+   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $Keyboard = Elm.Keyboard.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Touch = Elm.Touch.make(_elm),
+   $Utils = Elm.Utils.make(_elm),
+   $Window = Elm.Window.make(_elm);
+   var locationSearch = Elm.Native.Port.make(_elm).inbound("locationSearch",
+   "String",
+   function (v) {
+      return typeof v === "string" || typeof v === "object" && v instanceof String ? v : _U.badPort("a string",
+      v);
+   });
+   var initialSeed = Elm.Native.Port.make(_elm).inbound("initialSeed",
+   "Int",
+   function (v) {
+      return typeof v === "number" ? v : _U.badPort("a number",
+      v);
+   });
+   var view = F2(function (_v0,
+   model) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return A2($Graphics$Collage.collage,
+              _v0._0,
+              _v0._1)($Board.view(model));}
+         _U.badCase($moduleName,
+         "between lines 81 and 82");
+      }();
+   });
+   var update = F2(function (action,
+   _v4) {
+      return function () {
+         return function () {
+            switch (action.ctor)
+            {case "ArrowDown":
+               return $Board.update($Board.Move($Board.Down))(_v4);
+               case "ArrowLeft":
+               return $Board.update($Board.Move($Board.Left))(_v4);
+               case "ArrowRight":
+               return $Board.update($Board.Move($Board.Right))(_v4);
+               case "ArrowUp":
+               return $Board.update($Board.Move($Board.Up))(_v4);
+               case "Click":
+               switch (action._0.ctor)
+                 {case "_Tuple2":
+                    switch (action._1.ctor)
+                      {case "_Tuple2":
+                         return function () {
+                              var boardTopLeftY = (action._1._1 - _v4.boardHeight * _v4.tileSize) / 2 | 0;
+                              var dy = action._0._1 - boardTopLeftY;
+                              var row = dy / _v4.tileSize | 0;
+                              var boardTopLeftX = (action._1._0 - _v4.boardWidth * _v4.tileSize) / 2 | 0;
+                              var dx = action._0._0 - boardTopLeftX;
+                              var column = dx / _v4.tileSize | 0;
+                              return _U.cmp(dx,
+                              0) < 0 || (_U.cmp(row,
+                              _v4.boardHeight) > -1 || (_U.cmp(dy,
+                              0) < 0 || _U.cmp(column,
+                              _v4.boardWidth) > -1)) ? _v4 : $Board.update($Board.MoveTile({ctor: "_Tuple2"
+                                                                                           ,_0: row
+                                                                                           ,_1: column}))(_v4);
+                           }();}
+                      break;}
+                 break;}
+            return _v4;
+         }();
+      }();
+   });
+   var Click = F2(function (a,b) {
+      return {ctor: "Click"
+             ,_0: a
+             ,_1: b};
+   });
+   var clicks = function () {
+      var createClick = F2(function (_v13,
+      dimensions) {
+         return function () {
+            return A2(Click,
+            {ctor: "_Tuple2"
+            ,_0: _v13.x
+            ,_1: _v13.y},
+            dimensions);
+         }();
+      });
+      return $Signal.sampleOn($Touch.taps)(A3($Signal.map2,
+      createClick,
+      $Touch.taps,
+      $Window.dimensions));
+   }();
+   var ArrowDown = {ctor: "ArrowDown"};
+   var ArrowUp = {ctor: "ArrowUp"};
+   var ArrowRight = {ctor: "ArrowRight"};
+   var ArrowLeft = {ctor: "ArrowLeft"};
+   var NoOp = {ctor: "NoOp"};
+   var arrows = function () {
+      var toAction = function (arrow) {
+         return _U.eq(arrow,
+         {_: {}
+         ,x: -1
+         ,y: 0}) ? ArrowLeft : _U.eq(arrow,
+         {_: {}
+         ,x: 1
+         ,y: 0}) ? ArrowRight : _U.eq(arrow,
+         {_: {}
+         ,x: 0
+         ,y: 1}) ? ArrowUp : _U.eq(arrow,
+         {_: {}
+         ,x: 0
+         ,y: -1}) ? ArrowDown : NoOp;
+      };
+      return A2($Signal.filter,
+      function (a) {
+         return !_U.eq(a,NoOp);
+      },
+      NoOp)($Signal.map(toAction)($Keyboard.arrows));
+   }();
+   var input = A2($Signal.merge,
+   arrows,
+   clicks);
+   var initialModel = function () {
+      var params = $Utils.queryParams(locationSearch);
+      var width = A4($Utils.dictGetInt,
+      "width",
+      3,
+      10,
+      params);
+      var height = A4($Utils.dictGetInt,
+      "height",
+      3,
+      10,
+      params);
+      return $Board.update($Board.Shuffle(100))(A5($Board.init,
+      initialSeed,
+      width,
+      height,
+      100,
+      1));
+   }();
+   var model = A3($Signal.foldp,
+   update,
+   initialModel,
+   input);
+   var main = A3($Signal.map2,
+   view,
+   $Window.dimensions,
+   model);
+   _elm.App.values = {_op: _op
+                     ,initialModel: initialModel
+                     ,NoOp: NoOp
+                     ,ArrowLeft: ArrowLeft
+                     ,ArrowRight: ArrowRight
+                     ,ArrowUp: ArrowUp
+                     ,ArrowDown: ArrowDown
+                     ,Click: Click
+                     ,update: update
+                     ,view: view
+                     ,clicks: clicks
+                     ,arrows: arrows
+                     ,input: input
+                     ,model: model
+                     ,main: main};
+   return _elm.App.values;
+};
 Elm.Array = Elm.Array || {};
 Elm.Array.make = function (_elm) {
    "use strict";
@@ -2164,167 +2345,6 @@ Elm.Dict.make = function (_elm) {
                       ,toList: toList
                       ,fromList: fromList};
    return _elm.Dict.values;
-};
-Elm.Game = Elm.Game || {};
-Elm.Game.make = function (_elm) {
-   "use strict";
-   _elm.Game = _elm.Game || {};
-   if (_elm.Game.values)
-   return _elm.Game.values;
-   var _op = {},
-   _N = Elm.Native,
-   _U = _N.Utils.make(_elm),
-   _L = _N.List.make(_elm),
-   $moduleName = "Game",
-   $Basics = Elm.Basics.make(_elm),
-   $Board = Elm.Board.make(_elm),
-   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
-   $Graphics$Element = Elm.Graphics.Element.make(_elm),
-   $Keyboard = Elm.Keyboard.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $Touch = Elm.Touch.make(_elm),
-   $Window = Elm.Window.make(_elm);
-   var initialSeed = Elm.Native.Port.make(_elm).inbound("initialSeed",
-   "Int",
-   function (v) {
-      return typeof v === "number" ? v : _U.badPort("a number",
-      v);
-   });
-   var view = F2(function (_v0,
-   model) {
-      return function () {
-         switch (_v0.ctor)
-         {case "_Tuple2":
-            return A2($Graphics$Collage.collage,
-              _v0._0,
-              _v0._1)($Board.view(model));}
-         _U.badCase($moduleName,
-         "between lines 74 and 75");
-      }();
-   });
-   var update = F2(function (action,
-   _v4) {
-      return function () {
-         return function () {
-            switch (action.ctor)
-            {case "ArrowDown":
-               return $Board.update($Board.Move($Board.Down))(_v4);
-               case "ArrowLeft":
-               return $Board.update($Board.Move($Board.Left))(_v4);
-               case "ArrowRight":
-               return $Board.update($Board.Move($Board.Right))(_v4);
-               case "ArrowUp":
-               return $Board.update($Board.Move($Board.Up))(_v4);
-               case "Click":
-               switch (action._0.ctor)
-                 {case "_Tuple2":
-                    switch (action._1.ctor)
-                      {case "_Tuple2":
-                         return function () {
-                              var boardTopLeftY = (action._1._1 - _v4.boardHeight * _v4.tileSize) / 2 | 0;
-                              var dy = action._0._1 - boardTopLeftY;
-                              var row = dy / _v4.tileSize | 0;
-                              var boardTopLeftX = (action._1._0 - _v4.boardWidth * _v4.tileSize) / 2 | 0;
-                              var dx = action._0._0 - boardTopLeftX;
-                              var column = dx / _v4.tileSize | 0;
-                              return _U.cmp(dx,
-                              0) < 0 || (_U.cmp(row,
-                              _v4.boardHeight) > -1 || (_U.cmp(dy,
-                              0) < 0 || _U.cmp(column,
-                              _v4.boardWidth) > -1)) ? _v4 : $Board.update($Board.MoveTile({ctor: "_Tuple2"
-                                                                                           ,_0: row
-                                                                                           ,_1: column}))(_v4);
-                           }();}
-                      break;}
-                 break;}
-            return _v4;
-         }();
-      }();
-   });
-   var Click = F2(function (a,b) {
-      return {ctor: "Click"
-             ,_0: a
-             ,_1: b};
-   });
-   var clicks = function () {
-      var createClick = F2(function (_v13,
-      dimensions) {
-         return function () {
-            return A2(Click,
-            {ctor: "_Tuple2"
-            ,_0: _v13.x
-            ,_1: _v13.y},
-            dimensions);
-         }();
-      });
-      return $Signal.sampleOn($Touch.taps)(A3($Signal.map2,
-      createClick,
-      $Touch.taps,
-      $Window.dimensions));
-   }();
-   var ArrowDown = {ctor: "ArrowDown"};
-   var ArrowUp = {ctor: "ArrowUp"};
-   var ArrowRight = {ctor: "ArrowRight"};
-   var ArrowLeft = {ctor: "ArrowLeft"};
-   var NoOp = {ctor: "NoOp"};
-   var arrows = function () {
-      var toAction = function (arrow) {
-         return _U.eq(arrow,
-         {_: {}
-         ,x: -1
-         ,y: 0}) ? ArrowLeft : _U.eq(arrow,
-         {_: {}
-         ,x: 1
-         ,y: 0}) ? ArrowRight : _U.eq(arrow,
-         {_: {}
-         ,x: 0
-         ,y: 1}) ? ArrowUp : _U.eq(arrow,
-         {_: {}
-         ,x: 0
-         ,y: -1}) ? ArrowDown : NoOp;
-      };
-      return A2($Signal.filter,
-      function (a) {
-         return !_U.eq(a,NoOp);
-      },
-      NoOp)($Signal.map(toAction)($Keyboard.arrows));
-   }();
-   var input = A2($Signal.merge,
-   arrows,
-   clicks);
-   var initialModel = $Board.update($Board.Shuffle(100))(A5($Board.init,
-   initialSeed,
-   3,
-   3,
-   100,
-   1));
-   var model = A3($Signal.foldp,
-   update,
-   initialModel,
-   input);
-   var main = A3($Signal.map2,
-   view,
-   $Window.dimensions,
-   model);
-   _elm.Game.values = {_op: _op
-                      ,initialModel: initialModel
-                      ,NoOp: NoOp
-                      ,ArrowLeft: ArrowLeft
-                      ,ArrowRight: ArrowRight
-                      ,ArrowUp: ArrowUp
-                      ,ArrowDown: ArrowDown
-                      ,Click: Click
-                      ,update: update
-                      ,view: view
-                      ,clicks: clicks
-                      ,arrows: arrows
-                      ,input: input
-                      ,model: model
-                      ,main: main};
-   return _elm.Game.values;
 };
 Elm.Graphics = Elm.Graphics || {};
 Elm.Graphics.Collage = Elm.Graphics.Collage || {};
@@ -13662,6 +13682,125 @@ Elm.Transform2D.make = function (_elm) {
                              ,scaleY: scaleY};
    return _elm.Transform2D.values;
 };
+Elm.UrlParameterParser = Elm.UrlParameterParser || {};
+Elm.UrlParameterParser.make = function (_elm) {
+   "use strict";
+   _elm.UrlParameterParser = _elm.UrlParameterParser || {};
+   if (_elm.UrlParameterParser.values)
+   return _elm.UrlParameterParser.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "UrlParameterParser",
+   $Basics = Elm.Basics.make(_elm),
+   $Dict = Elm.Dict.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $String = Elm.String.make(_elm),
+   $UrlParseUtil = Elm.UrlParseUtil.make(_elm);
+   var UrlParams = function (a) {
+      return {ctor: "UrlParams"
+             ,_0: a};
+   };
+   var parseParams = function (stringWithAmpersands) {
+      return function () {
+         var eachParam = A2($String.split,
+         "&",
+         stringWithAmpersands);
+         var eachPair = A2($List.map,
+         $UrlParseUtil.splitAtFirst(_U.chr("=")),
+         eachParam);
+         return UrlParams($Dict.fromList(eachPair));
+      }();
+   };
+   var Error = function (a) {
+      return {ctor: "Error",_0: a};
+   };
+   var parseSearchString = function (startsWithQuestionMarkThenParams) {
+      return function () {
+         var _v0 = $String.uncons(startsWithQuestionMarkThenParams);
+         switch (_v0.ctor)
+         {case "Just":
+            switch (_v0._0.ctor)
+              {case "_Tuple2":
+                 switch (_v0._0._0 + "")
+                   {case "?":
+                      return parseParams(_v0._0._1);}
+                   break;}
+              break;
+            case "Nothing":
+            return Error("No URL params");}
+         _U.badCase($moduleName,
+         "between lines 64 and 66");
+      }();
+   };
+   _elm.UrlParameterParser.values = {_op: _op
+                                    ,parseSearchString: parseSearchString
+                                    ,Error: Error
+                                    ,UrlParams: UrlParams};
+   return _elm.UrlParameterParser.values;
+};
+Elm.UrlParseUtil = Elm.UrlParseUtil || {};
+Elm.UrlParseUtil.make = function (_elm) {
+   "use strict";
+   _elm.UrlParseUtil = _elm.UrlParseUtil || {};
+   if (_elm.UrlParseUtil.values)
+   return _elm.UrlParseUtil.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "UrlParseUtil",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $String = Elm.String.make(_elm);
+   var firstOccurrence = F2(function (c,
+   s) {
+      return function () {
+         var _v0 = A2($String.indexes,
+         $String.fromChar(c),
+         s);
+         switch (_v0.ctor)
+         {case "::":
+            return $Maybe.Just(_v0._0);
+            case "[]":
+            return $Maybe.Nothing;}
+         _U.badCase($moduleName,
+         "between lines 18 and 20");
+      }();
+   });
+   var splitAtFirst = F2(function (c,
+   s) {
+      return function () {
+         var _v3 = A2(firstOccurrence,
+         c,
+         s);
+         switch (_v3.ctor)
+         {case "Just":
+            return {ctor: "_Tuple2"
+                   ,_0: A2($String.left,_v3._0,s)
+                   ,_1: A2($String.dropLeft,
+                   _v3._0 + 1,
+                   s)};
+            case "Nothing":
+            return {ctor: "_Tuple2"
+                   ,_0: s
+                   ,_1: ""};}
+         _U.badCase($moduleName,
+         "between lines 11 and 13");
+      }();
+   });
+   _elm.UrlParseUtil.values = {_op: _op
+                              ,splitAtFirst: splitAtFirst
+                              ,firstOccurrence: firstOccurrence};
+   return _elm.UrlParseUtil.values;
+};
 Elm.Utils = Elm.Utils || {};
 Elm.Utils.make = function (_elm) {
    "use strict";
@@ -13675,11 +13814,53 @@ Elm.Utils.make = function (_elm) {
    $moduleName = "Utils",
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
+   $Dict = Elm.Dict.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Random = Elm.Random.make(_elm),
    $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
+   $Signal = Elm.Signal.make(_elm),
+   $String = Elm.String.make(_elm),
+   $UrlParameterParser = Elm.UrlParameterParser.make(_elm);
+   var dictGetInt = F4(function (key,
+   min,
+   max,
+   dict) {
+      return function () {
+         var _v0 = A2($Dict.get,
+         key,
+         dict);
+         switch (_v0.ctor)
+         {case "Just":
+            return function () {
+                 var _v2 = $String.toInt(_v0._0);
+                 switch (_v2.ctor)
+                 {case "Err": return min;
+                    case "Ok":
+                    return A3($Basics.clamp,
+                      min,
+                      max,
+                      _v2._0);}
+                 _U.badCase($moduleName,
+                 "between lines 47 and 52");
+              }();
+            case "Nothing": return min;}
+         _U.badCase($moduleName,
+         "between lines 42 and 52");
+      }();
+   });
+   var queryParams = function (locationSearch) {
+      return function () {
+         var _v5 = $UrlParameterParser.parseSearchString(locationSearch);
+         switch (_v5.ctor)
+         {case "Error":
+            return $Dict.empty;
+            case "UrlParams":
+            return _v5._0;}
+         _U.badCase($moduleName,
+         "between lines 33 and 38");
+      }();
+   };
    var unsafeExtract = function (maybe) {
       return function () {
          switch (maybe.ctor)
@@ -13708,7 +13889,9 @@ Elm.Utils.make = function (_elm) {
    });
    _elm.Utils.values = {_op: _op
                        ,unsafeExtract: unsafeExtract
-                       ,randomListItem: randomListItem};
+                       ,randomListItem: randomListItem
+                       ,queryParams: queryParams
+                       ,dictGetInt: dictGetInt};
    return _elm.Utils.values;
 };
 Elm.VirtualDom = Elm.VirtualDom || {};
