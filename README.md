@@ -1,5 +1,12 @@
 # <a href="http://moroshko.github.io/sliding-puzzle" target="_blank">Sliding Puzzle</a>
 
+## Game Parameters
+
+You can set the following game parameters via the query string:
+
+* `width` - game width (between 3 and 10)
+* `height` - game height (between 3 and 10)
+
 ## Development
 
 ```shell
