@@ -71,7 +71,7 @@ getTileSize (boardWidth, boardHeight) (windowWidth, windowHeight) =
     minTileSize = 5
     maxTileSize = 200
   in
-    Utils.dictGetInt "tileSize" defaultTileSize minTileSize maxTileSize queryParams
+    Utils.dictGetInt "size" defaultTileSize minTileSize maxTileSize queryParams
 
 
 queryParams : Dict String String

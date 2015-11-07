@@ -135,7 +135,7 @@ Elm.App.make = function (_elm) {
                          tileWidth,
                          tileHeight));
                          return A5($Utils.dictGetInt,
-                         "tileSize",
+                         "size",
                          defaultTileSize,
                          minTileSize,
                          maxTileSize,
