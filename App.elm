@@ -62,11 +62,6 @@ initialModel =
       |> Board.update (Board.Shuffle initialShuffle)
 
 
-queryParams : Dict String String
-queryParams =
-  Utils.queryParams locationSearch
-
-
 getTileSize : (Int, Int) -> (Int, Int) -> Int
 getTileSize (boardWidth, boardHeight) (windowWidth, windowHeight) =
   let
@@ -79,6 +74,11 @@ getTileSize (boardWidth, boardHeight) (windowWidth, windowHeight) =
     maxTileSize = 200
   in
     Utils.dictGetInt "tileSize" defaultTileSize minTileSize maxTileSize queryParams
+
+
+queryParams : Dict String String
+queryParams =
+  Utils.queryParams locationSearch
 
 
 -- UPDATE
