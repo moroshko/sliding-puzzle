@@ -35,9 +35,14 @@ initialModel =
     tileSize = getTileSize (width, height) windowSize
     
     tileSpacing = 1
+
+    defaultShuffle = (width * height) ^ 2
+    minShuffle = 0
+    maxShuffle = 20000
+    shuffle = Debug.log "shuffle" (Utils.dictGetInt "shuffle" defaultShuffle minShuffle maxShuffle queryParams)
   in
     Board.init initialSeed width height tileSize tileSpacing
-      |> Board.update (Board.Shuffle 100)
+      |> Board.update (Board.Shuffle shuffle)
 
 
 queryParams : Dict String String
