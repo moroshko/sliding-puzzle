@@ -18,30 +18,48 @@ type alias Model =
   Board.Model
 
 
-initialModel : Model
-initialModel =
+initialWidth : Int
+initialWidth =
   let
     defaultBoardWidth = 3
     minBoardWidth = 2
     maxBoardWidth = 10
-    width = Utils.dictGetInt "width" defaultBoardWidth minBoardWidth maxBoardWidth queryParams
+  in
+    Utils.dictGetInt "width" defaultBoardWidth minBoardWidth maxBoardWidth queryParams
 
+
+initialHeight : Int
+initialHeight =
+  let
     defaultBoardHeight = 3
     minBoardHeight = 2
     maxBoardHeight = 10
-    height = Utils.dictGetInt "height" defaultBoardHeight minBoardHeight maxBoardHeight queryParams
-    
-    tileSize = getTileSize (width, height) windowSize
-    
-    tileSpacing = 1
+  in
+    Utils.dictGetInt "height" defaultBoardHeight minBoardHeight maxBoardHeight queryParams
 
-    defaultShuffle = (width * height) ^ 2
+
+initialTileSize : Int
+initialTileSize =
+  getTileSize (initialWidth, initialHeight) windowSize
+
+
+initialShuffle : Int
+initialShuffle =
+  let
+    defaultShuffle = (initialWidth * initialHeight) ^ 2
     minShuffle = 0
     maxShuffle = 20000
-    shuffle = Utils.dictGetInt "shuffle" defaultShuffle minShuffle maxShuffle queryParams
   in
-    Board.init initialSeed width height tileSize tileSpacing
-      |> Board.update (Board.Shuffle shuffle)
+    Utils.dictGetInt "shuffle" defaultShuffle minShuffle maxShuffle queryParams  
+
+
+initialModel : Model
+initialModel =
+  let
+    tileSpacing = 1
+  in
+    Board.init initialSeed initialWidth initialHeight initialTileSize tileSpacing
+      |> Board.update (Board.Shuffle initialShuffle)
 
 
 queryParams : Dict String String

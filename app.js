@@ -55,7 +55,7 @@ Elm.App.make = function (_elm) {
               _v0._0,
               _v0._1)($Board.view(model));}
          _U.badCase($moduleName,
-         "between lines 119 and 120");
+         "between lines 137 and 138");
       }();
    });
    var WindowResize = function (a) {
@@ -142,10 +142,10 @@ Elm.App.make = function (_elm) {
                          queryParams);
                       }();}
                  _U.badCase($moduleName,
-                 "between lines 54 and 63");
+                 "between lines 72 and 81");
               }();}
          _U.badCase($moduleName,
-         "between lines 54 and 63");
+         "between lines 72 and 81");
       }();
    });
    var update = F2(function (action,
@@ -195,46 +195,52 @@ Elm.App.make = function (_elm) {
          }();
       }();
    });
-   var initialModel = function () {
-      var maxShuffle = 20000;
-      var minShuffle = 0;
-      var tileSpacing = 1;
+   var initialHeight = function () {
       var maxBoardHeight = 10;
       var minBoardHeight = 2;
       var defaultBoardHeight = 3;
-      var height = A5($Utils.dictGetInt,
+      return A5($Utils.dictGetInt,
       "height",
       defaultBoardHeight,
       minBoardHeight,
       maxBoardHeight,
       queryParams);
+   }();
+   var initialWidth = function () {
       var maxBoardWidth = 10;
       var minBoardWidth = 2;
       var defaultBoardWidth = 3;
-      var width = A5($Utils.dictGetInt,
+      return A5($Utils.dictGetInt,
       "width",
       defaultBoardWidth,
       minBoardWidth,
       maxBoardWidth,
       queryParams);
-      var tileSize = A2(getTileSize,
-      {ctor: "_Tuple2"
-      ,_0: width
-      ,_1: height},
-      windowSize);
-      var defaultShuffle = Math.pow(width * height,
+   }();
+   var initialTileSize = A2(getTileSize,
+   {ctor: "_Tuple2"
+   ,_0: initialWidth
+   ,_1: initialHeight},
+   windowSize);
+   var initialShuffle = function () {
+      var maxShuffle = 20000;
+      var minShuffle = 0;
+      var defaultShuffle = Math.pow(initialWidth * initialHeight,
       2);
-      var shuffle = A5($Utils.dictGetInt,
+      return A5($Utils.dictGetInt,
       "shuffle",
       defaultShuffle,
       minShuffle,
       maxShuffle,
       queryParams);
-      return $Board.update($Board.Shuffle(shuffle))(A5($Board.init,
+   }();
+   var initialModel = function () {
+      var tileSpacing = 1;
+      return $Board.update($Board.Shuffle(initialShuffle))(A5($Board.init,
       initialSeed,
-      width,
-      height,
-      tileSize,
+      initialWidth,
+      initialHeight,
+      initialTileSize,
       tileSpacing));
    }();
    var model = A3($Signal.foldp,
@@ -246,6 +252,10 @@ Elm.App.make = function (_elm) {
    windowDimensions,
    model);
    _elm.App.values = {_op: _op
+                     ,initialWidth: initialWidth
+                     ,initialHeight: initialHeight
+                     ,initialTileSize: initialTileSize
+                     ,initialShuffle: initialShuffle
                      ,initialModel: initialModel
                      ,queryParams: queryParams
                      ,getTileSize: getTileSize
