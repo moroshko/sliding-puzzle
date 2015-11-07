@@ -1,11 +1,9 @@
 module App where
 
-import Html exposing (Html, div, button, text)
 import Graphics.Element exposing (Element)
 import Dict exposing (Dict)
 import Graphics.Collage
 import Keyboard
-import Random
 import Window
 import Touch
 import Board

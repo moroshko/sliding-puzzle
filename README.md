@@ -13,7 +13,7 @@ You can set the following game parameters via the query string:
 
 ```shell
 $ elm package install
-$ elm make App.elm --output app.js
+$ elm make --warn App.elm --output app.js
 $ elm reactor
 ```
 
