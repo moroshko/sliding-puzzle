@@ -21,7 +21,7 @@ type alias Model =
 initialWidth : Int
 initialWidth =
   let
-    defaultBoardWidth = 4
+    defaultBoardWidth = 3
     minBoardWidth = 2
     maxBoardWidth = 10
   in
@@ -31,7 +31,7 @@ initialWidth =
 initialHeight : Int
 initialHeight =
   let
-    defaultBoardHeight = 4
+    defaultBoardHeight = 3
     minBoardHeight = 2
     maxBoardHeight = 10
   in

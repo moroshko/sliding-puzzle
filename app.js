@@ -142,10 +142,10 @@ Elm.App.make = function (_elm) {
                          queryParams);
                       }();}
                  _U.badCase($moduleName,
-                 "between lines 67 and 76");
+                 "between lines 72 and 81");
               }();}
          _U.badCase($moduleName,
-         "between lines 67 and 76");
+         "between lines 72 and 81");
       }();
    });
    var update = F2(function (action,
@@ -198,7 +198,7 @@ Elm.App.make = function (_elm) {
    var initialHeight = function () {
       var maxBoardHeight = 10;
       var minBoardHeight = 2;
-      var defaultBoardHeight = 4;
+      var defaultBoardHeight = 3;
       return A5($Utils.dictGetInt,
       "height",
       defaultBoardHeight,
@@ -209,7 +209,7 @@ Elm.App.make = function (_elm) {
    var initialWidth = function () {
       var maxBoardWidth = 10;
       var minBoardWidth = 2;
-      var defaultBoardWidth = 4;
+      var defaultBoardWidth = 3;
       return A5($Utils.dictGetInt,
       "width",
       defaultBoardWidth,
@@ -257,8 +257,8 @@ Elm.App.make = function (_elm) {
                      ,initialTileSize: initialTileSize
                      ,initialShuffle: initialShuffle
                      ,initialModel: initialModel
-                     ,getTileSize: getTileSize
                      ,queryParams: queryParams
+                     ,getTileSize: getTileSize
                      ,NoOp: NoOp
                      ,ArrowLeft: ArrowLeft
                      ,ArrowRight: ArrowRight
