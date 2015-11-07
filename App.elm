@@ -2,6 +2,7 @@ module App where
 
 import Html exposing (Html, div, button, text)
 import Graphics.Element exposing (Element)
+import Dict exposing (Dict)
 import Graphics.Collage
 import Keyboard
 import Random
@@ -21,12 +22,41 @@ type alias Model =
 initialModel : Model
 initialModel =
   let
-    params = Utils.queryParams locationSearch
-    width = Utils.dictGetInt "width" 3 10 params
-    height = Utils.dictGetInt "height" 3 10 params
+    defaultBoardWidth = 3
+    minBoardWidth = 3
+    maxBoardWidth = 10
+    width = Utils.dictGetInt "width" defaultBoardWidth minBoardWidth maxBoardWidth queryParams
+
+    defaultBoardHeight = 3
+    minBoardHeight = 3
+    maxBoardHeight = 10
+    height = Utils.dictGetInt "height" defaultBoardHeight minBoardHeight maxBoardHeight queryParams
+    
+    tileSize = getTileSize (width, height) windowSize
+    
+    tileSpacing = 1
   in
-    Board.init initialSeed width height 100 1
+    Board.init initialSeed width height tileSize tileSpacing
       |> Board.update (Board.Shuffle 100)
+
+
+queryParams : Dict String String
+queryParams =
+  Utils.queryParams locationSearch
+
+
+getTileSize : (Int, Int) -> (Int, Int) -> Int
+getTileSize (boardWidth, boardHeight) (windowWidth, windowHeight) =
+  let
+    padding = 40
+    tileWidth = (windowWidth - padding) // boardWidth
+    tileHeight = (windowHeight - padding) // boardHeight
+    
+    defaultTileSize = min tileWidth tileHeight |> min maxTileSize
+    minTileSize = 5
+    maxTileSize = 200
+  in
+    Utils.dictGetInt "tileSize" defaultTileSize minTileSize maxTileSize queryParams
 
 
 -- UPDATE
@@ -38,6 +68,7 @@ type Action
   | ArrowUp
   | ArrowDown
   | Click (Int, Int) (Int, Int)
+  | WindowResize (Int, Int)
 
 
 update : Action -> Model -> Model
@@ -70,6 +101,9 @@ update action ({ boardWidth, boardHeight, tileSize } as model) =
           then model
           else model |> Board.update (Board.MoveTile (row, column))
     
+    WindowResize dimensions ->
+      { model | tileSize <- getTileSize (boardWidth, boardHeight) dimensions }
+
     _ ->
       model
 
@@ -85,11 +119,21 @@ view (windowWidth, windowHeight) model =
 -- PORTS
 
 port initialSeed : Int
-
 port locationSearch : String
+port windowSize : (Int, Int)
 
 
 -- SIGNALS
+
+windowDimensions : Signal (Int, Int)
+windowDimensions =
+  Window.dimensions
+
+
+windowResize : Signal Action
+windowResize =
+  Signal.map WindowResize windowDimensions
+
 
 clicks : Signal Action
 clicks =
@@ -97,7 +141,7 @@ clicks =
     createClick { x, y } dimensions =
       Click (x, y) dimensions
   in
-    Signal.map2 createClick Touch.taps Window.dimensions
+    Signal.map2 createClick Touch.taps windowDimensions
       |> Signal.sampleOn Touch.taps
 
 
@@ -118,7 +162,11 @@ arrows =
 
 input : Signal Action
 input =
-  Signal.merge arrows clicks
+  Signal.mergeMany
+    [ windowResize
+    , arrows
+    , clicks
+    ]
 
 
 model : Signal Model
@@ -130,4 +178,4 @@ model =
 
 main : Signal Element
 main =
-  Signal.map2 view Window.dimensions model
+  Signal.map2 view windowDimensions model

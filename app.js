@@ -12,6 +12,7 @@ Elm.App.make = function (_elm) {
    $moduleName = "App",
    $Basics = Elm.Basics.make(_elm),
    $Board = Elm.Board.make(_elm),
+   $Dict = Elm.Dict.make(_elm),
    $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
    $Graphics$Element = Elm.Graphics.Element.make(_elm),
    $Keyboard = Elm.Keyboard.make(_elm),
@@ -22,6 +23,17 @@ Elm.App.make = function (_elm) {
    $Touch = Elm.Touch.make(_elm),
    $Utils = Elm.Utils.make(_elm),
    $Window = Elm.Window.make(_elm);
+   var windowDimensions = $Window.dimensions;
+   var windowSize = Elm.Native.Port.make(_elm).inbound("windowSize",
+   "(Int, Int)",
+   function (v) {
+      return typeof v === "object" && v instanceof Array ? {ctor: "_Tuple2"
+                                                           ,_0: typeof v[0] === "number" ? v[0] : _U.badPort("a number",
+                                                           v[0])
+                                                           ,_1: typeof v[1] === "number" ? v[1] : _U.badPort("a number",
+                                                           v[1])} : _U.badPort("an array",
+      v);
+   });
    var locationSearch = Elm.Native.Port.make(_elm).inbound("locationSearch",
    "String",
    function (v) {
@@ -43,68 +55,36 @@ Elm.App.make = function (_elm) {
               _v0._0,
               _v0._1)($Board.view(model));}
          _U.badCase($moduleName,
-         "between lines 81 and 82");
+         "between lines 115 and 116");
       }();
    });
-   var update = F2(function (action,
-   _v4) {
-      return function () {
-         return function () {
-            switch (action.ctor)
-            {case "ArrowDown":
-               return $Board.update($Board.Move($Board.Down))(_v4);
-               case "ArrowLeft":
-               return $Board.update($Board.Move($Board.Left))(_v4);
-               case "ArrowRight":
-               return $Board.update($Board.Move($Board.Right))(_v4);
-               case "ArrowUp":
-               return $Board.update($Board.Move($Board.Up))(_v4);
-               case "Click":
-               switch (action._0.ctor)
-                 {case "_Tuple2":
-                    switch (action._1.ctor)
-                      {case "_Tuple2":
-                         return function () {
-                              var boardTopLeftY = (action._1._1 - _v4.boardHeight * _v4.tileSize) / 2 | 0;
-                              var dy = action._0._1 - boardTopLeftY;
-                              var row = dy / _v4.tileSize | 0;
-                              var boardTopLeftX = (action._1._0 - _v4.boardWidth * _v4.tileSize) / 2 | 0;
-                              var dx = action._0._0 - boardTopLeftX;
-                              var column = dx / _v4.tileSize | 0;
-                              return _U.cmp(dx,
-                              0) < 0 || (_U.cmp(row,
-                              _v4.boardHeight) > -1 || (_U.cmp(dy,
-                              0) < 0 || _U.cmp(column,
-                              _v4.boardWidth) > -1)) ? _v4 : $Board.update($Board.MoveTile({ctor: "_Tuple2"
-                                                                                           ,_0: row
-                                                                                           ,_1: column}))(_v4);
-                           }();}
-                      break;}
-                 break;}
-            return _v4;
-         }();
-      }();
-   });
+   var WindowResize = function (a) {
+      return {ctor: "WindowResize"
+             ,_0: a};
+   };
+   var windowResize = A2($Signal.map,
+   WindowResize,
+   windowDimensions);
    var Click = F2(function (a,b) {
       return {ctor: "Click"
              ,_0: a
              ,_1: b};
    });
    var clicks = function () {
-      var createClick = F2(function (_v13,
+      var createClick = F2(function (_v4,
       dimensions) {
          return function () {
             return A2(Click,
             {ctor: "_Tuple2"
-            ,_0: _v13.x
-            ,_1: _v13.y},
+            ,_0: _v4.x
+            ,_1: _v4.y},
             dimensions);
          }();
       });
       return $Signal.sampleOn($Touch.taps)(A3($Signal.map2,
       createClick,
       $Touch.taps,
-      $Window.dimensions));
+      windowDimensions));
    }();
    var ArrowDown = {ctor: "ArrowDown"};
    var ArrowUp = {ctor: "ArrowUp"};
@@ -133,27 +113,119 @@ Elm.App.make = function (_elm) {
       },
       NoOp)($Signal.map(toAction)($Keyboard.arrows));
    }();
-   var input = A2($Signal.merge,
-   arrows,
-   clicks);
+   var input = $Signal.mergeMany(_L.fromArray([windowResize
+                                              ,arrows
+                                              ,clicks]));
+   var queryParams = $Utils.queryParams(locationSearch);
+   var getTileSize = F2(function (_v6,
+   _v7) {
+      return function () {
+         switch (_v7.ctor)
+         {case "_Tuple2":
+            return function () {
+                 switch (_v6.ctor)
+                 {case "_Tuple2":
+                    return function () {
+                         var maxTileSize = 200;
+                         var minTileSize = 5;
+                         var padding = 40;
+                         var tileWidth = (_v7._0 - padding) / _v6._0 | 0;
+                         var tileHeight = (_v7._1 - padding) / _v6._1 | 0;
+                         var defaultTileSize = $Basics.min(maxTileSize)(A2($Basics.min,
+                         tileWidth,
+                         tileHeight));
+                         return A5($Utils.dictGetInt,
+                         "tileSize",
+                         defaultTileSize,
+                         minTileSize,
+                         maxTileSize,
+                         queryParams);
+                      }();}
+                 _U.badCase($moduleName,
+                 "between lines 50 and 59");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 50 and 59");
+      }();
+   });
+   var update = F2(function (action,
+   _v14) {
+      return function () {
+         return function () {
+            switch (action.ctor)
+            {case "ArrowDown":
+               return $Board.update($Board.Move($Board.Down))(_v14);
+               case "ArrowLeft":
+               return $Board.update($Board.Move($Board.Left))(_v14);
+               case "ArrowRight":
+               return $Board.update($Board.Move($Board.Right))(_v14);
+               case "ArrowUp":
+               return $Board.update($Board.Move($Board.Up))(_v14);
+               case "Click":
+               switch (action._0.ctor)
+                 {case "_Tuple2":
+                    switch (action._1.ctor)
+                      {case "_Tuple2":
+                         return function () {
+                              var boardTopLeftY = (action._1._1 - _v14.boardHeight * _v14.tileSize) / 2 | 0;
+                              var dy = action._0._1 - boardTopLeftY;
+                              var row = dy / _v14.tileSize | 0;
+                              var boardTopLeftX = (action._1._0 - _v14.boardWidth * _v14.tileSize) / 2 | 0;
+                              var dx = action._0._0 - boardTopLeftX;
+                              var column = dx / _v14.tileSize | 0;
+                              return _U.cmp(dx,
+                              0) < 0 || (_U.cmp(row,
+                              _v14.boardHeight) > -1 || (_U.cmp(dy,
+                              0) < 0 || _U.cmp(column,
+                              _v14.boardWidth) > -1)) ? _v14 : $Board.update($Board.MoveTile({ctor: "_Tuple2"
+                                                                                             ,_0: row
+                                                                                             ,_1: column}))(_v14);
+                           }();}
+                      break;}
+                 break;
+               case "WindowResize":
+               return _U.replace([["tileSize"
+                                  ,A2(getTileSize,
+                                  {ctor: "_Tuple2"
+                                  ,_0: _v14.boardWidth
+                                  ,_1: _v14.boardHeight},
+                                  action._0)]],
+                 _v14);}
+            return _v14;
+         }();
+      }();
+   });
    var initialModel = function () {
-      var params = $Utils.queryParams(locationSearch);
-      var width = A4($Utils.dictGetInt,
-      "width",
-      3,
-      10,
-      params);
-      var height = A4($Utils.dictGetInt,
+      var tileSpacing = 1;
+      var maxBoardHeight = 10;
+      var minBoardHeight = 3;
+      var defaultBoardHeight = 3;
+      var height = A5($Utils.dictGetInt,
       "height",
-      3,
-      10,
-      params);
+      defaultBoardHeight,
+      minBoardHeight,
+      maxBoardHeight,
+      queryParams);
+      var maxBoardWidth = 10;
+      var minBoardWidth = 3;
+      var defaultBoardWidth = 3;
+      var width = A5($Utils.dictGetInt,
+      "width",
+      defaultBoardWidth,
+      minBoardWidth,
+      maxBoardWidth,
+      queryParams);
+      var tileSize = A2(getTileSize,
+      {ctor: "_Tuple2"
+      ,_0: width
+      ,_1: height},
+      windowSize);
       return $Board.update($Board.Shuffle(100))(A5($Board.init,
       initialSeed,
       width,
       height,
-      100,
-      1));
+      tileSize,
+      tileSpacing));
    }();
    var model = A3($Signal.foldp,
    update,
@@ -161,18 +233,23 @@ Elm.App.make = function (_elm) {
    input);
    var main = A3($Signal.map2,
    view,
-   $Window.dimensions,
+   windowDimensions,
    model);
    _elm.App.values = {_op: _op
                      ,initialModel: initialModel
+                     ,queryParams: queryParams
+                     ,getTileSize: getTileSize
                      ,NoOp: NoOp
                      ,ArrowLeft: ArrowLeft
                      ,ArrowRight: ArrowRight
                      ,ArrowUp: ArrowUp
                      ,ArrowDown: ArrowDown
                      ,Click: Click
+                     ,WindowResize: WindowResize
                      ,update: update
                      ,view: view
+                     ,windowDimensions: windowDimensions
+                     ,windowResize: windowResize
                      ,clicks: clicks
                      ,arrows: arrows
                      ,input: input
@@ -13822,7 +13899,8 @@ Elm.Utils.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $String = Elm.String.make(_elm),
    $UrlParameterParser = Elm.UrlParameterParser.make(_elm);
-   var dictGetInt = F4(function (key,
+   var dictGetInt = F5(function (key,
+   $default,
    min,
    max,
    dict) {
@@ -13835,7 +13913,7 @@ Elm.Utils.make = function (_elm) {
             return function () {
                  var _v2 = $String.toInt(_v0._0);
                  switch (_v2.ctor)
-                 {case "Err": return min;
+                 {case "Err": return $default;
                     case "Ok":
                     return A3($Basics.clamp,
                       min,
@@ -13844,7 +13922,8 @@ Elm.Utils.make = function (_elm) {
                  _U.badCase($moduleName,
                  "between lines 47 and 52");
               }();
-            case "Nothing": return min;}
+            case "Nothing":
+            return $default;}
          _U.badCase($moduleName,
          "between lines 42 and 52");
       }();

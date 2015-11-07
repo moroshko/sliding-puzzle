@@ -37,16 +37,16 @@ queryParams locationSearch =
     UrlParams dict ->
       dict
 
-dictGetInt : String -> Int -> Int -> Dict String String -> Int
-dictGetInt key min max dict =
+dictGetInt : String -> Int -> Int -> Int -> Dict String String -> Int
+dictGetInt key default min max dict =
   case Dict.get key dict of
     Nothing ->
-      min
+      default
 
     Just value ->
       case String.toInt value of
         Err _ ->
-          min
+          default
 
         Ok intValue ->
           clamp min max intValue
