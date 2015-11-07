@@ -14,7 +14,10 @@
   Elm.fullscreen(Elm.App, {
     initialSeed: Math.floor(Math.random() * 0xFFFFFFFF),
     locationSearch: window.location.search,
-    windowSize: [window.innerWidth, window.innerHeight]
+    windowSize: [
+      window.innerWidth > 0 ? window.innerWidth : window.screen.width,
+      window.innerHeight > 0 ? window.innerHeight : window.screen.height
+    ]
   });
 </script>
 </html>

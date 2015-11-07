@@ -4,8 +4,8 @@
 
 You can set the following game parameters via the query string:
 
-* `width` - game width. Range: [3..10]. Defaults to 3.
-* `height` - game height. Range: [3..10]. Defaults to 3.
+* `width` - game width. Range: [2..10]. Defaults to 3.
+* `height` - game height. Range: [2..10]. Defaults to 3.
 * `tileSize` - tile size in pixels. Range: [5..200]. Defaults to maximaze the screen space, but doesn't go above 200.
 
 ## Development

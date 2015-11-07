@@ -23,12 +23,12 @@ initialModel : Model
 initialModel =
   let
     defaultBoardWidth = 3
-    minBoardWidth = 3
+    minBoardWidth = 2
     maxBoardWidth = 10
     width = Utils.dictGetInt "width" defaultBoardWidth minBoardWidth maxBoardWidth queryParams
 
     defaultBoardHeight = 3
-    minBoardHeight = 3
+    minBoardHeight = 2
     maxBoardHeight = 10
     height = Utils.dictGetInt "height" defaultBoardHeight minBoardHeight maxBoardHeight queryParams
     

@@ -198,7 +198,7 @@ Elm.App.make = function (_elm) {
    var initialModel = function () {
       var tileSpacing = 1;
       var maxBoardHeight = 10;
-      var minBoardHeight = 3;
+      var minBoardHeight = 2;
       var defaultBoardHeight = 3;
       var height = A5($Utils.dictGetInt,
       "height",
@@ -207,7 +207,7 @@ Elm.App.make = function (_elm) {
       maxBoardHeight,
       queryParams);
       var maxBoardWidth = 10;
-      var minBoardWidth = 3;
+      var minBoardWidth = 2;
       var defaultBoardWidth = 3;
       var width = A5($Utils.dictGetInt,
       "width",
