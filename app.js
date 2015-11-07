@@ -12,7 +12,6 @@ Elm.App.make = function (_elm) {
    $moduleName = "App",
    $Basics = Elm.Basics.make(_elm),
    $Board = Elm.Board.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
    $Dict = Elm.Dict.make(_elm),
    $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
    $Graphics$Element = Elm.Graphics.Element.make(_elm),
@@ -56,7 +55,7 @@ Elm.App.make = function (_elm) {
               _v0._0,
               _v0._1)($Board.view(model));}
          _U.badCase($moduleName,
-         "between lines 120 and 121");
+         "between lines 119 and 120");
       }();
    });
    var WindowResize = function (a) {
@@ -143,10 +142,10 @@ Elm.App.make = function (_elm) {
                          queryParams);
                       }();}
                  _U.badCase($moduleName,
-                 "between lines 55 and 64");
+                 "between lines 54 and 63");
               }();}
          _U.badCase($moduleName,
-         "between lines 55 and 64");
+         "between lines 54 and 63");
       }();
    });
    var update = F2(function (action,
@@ -225,14 +224,12 @@ Elm.App.make = function (_elm) {
       windowSize);
       var defaultShuffle = Math.pow(width * height,
       2);
-      var shuffle = A2($Debug.log,
-      "shuffle",
-      A5($Utils.dictGetInt,
+      var shuffle = A5($Utils.dictGetInt,
       "shuffle",
       defaultShuffle,
       minShuffle,
       maxShuffle,
-      queryParams));
+      queryParams);
       return $Board.update($Board.Shuffle(shuffle))(A5($Board.init,
       initialSeed,
       width,
