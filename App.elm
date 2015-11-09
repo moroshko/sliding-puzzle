@@ -3,6 +3,7 @@ module App where
 import Graphics.Element exposing (Element)
 import Dict exposing (Dict)
 import Graphics.Collage
+import Signal.Extra
 import Keyboard
 import Window
 import Touch
@@ -36,9 +37,9 @@ initialHeight =
     Utils.dictGetInt "height" defaultBoardHeight minBoardHeight maxBoardHeight queryParams
 
 
-initialTileSize : Int
-initialTileSize =
-  getTileSize (initialWidth, initialHeight) windowSize
+initialTileSize : (Int, Int) -> Int
+initialTileSize windowDimensionsValue =
+  getTileSize (initialWidth, initialHeight) windowDimensionsValue
 
 
 initialShuffle : Int
@@ -70,12 +71,12 @@ queryParams =
   Utils.queryParams locationSearch
 
 
-initialModel : Model
-initialModel =
+initialModel : (Int, Int) -> Model
+initialModel windowDimensionsValue =
   let
     tileSpacing = 1
   in
-    Board.init initialSeed initialWidth initialHeight initialTileSize tileSpacing
+    Board.init initialSeed initialWidth initialHeight (initialTileSize windowDimensionsValue) tileSpacing
       |> Board.update (Board.Shuffle initialShuffle)
 
 
@@ -140,7 +141,6 @@ view (windowWidth, windowHeight) model =
 
 port initialSeed : Int
 port locationSearch : String
-port windowSize : (Int, Int)
 
 
 -- SIGNALS
@@ -191,7 +191,16 @@ input =
 
 model : Signal Model
 model =
-  Signal.foldp update initialModel input
+  let
+    getInitialModel initialInput =
+      case initialInput of
+        WindowResize dimensions ->
+          initialModel dimensions
+
+        _ ->
+          Debug.crash "initial action should be WindowResize"
+  in
+    Signal.Extra.foldp' update getInitialModel input
 
 
 -- MAIN

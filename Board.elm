@@ -1,7 +1,6 @@
 module Board (Model, init, Direction(..), Action(..), update, view) where
 
 import Graphics.Collage exposing (Form)
-import Array exposing (Array)
 import Color exposing (Color)
 import Random exposing (Seed)
 import Dict exposing (Dict)

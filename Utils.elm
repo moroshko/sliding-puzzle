@@ -12,6 +12,7 @@ unsafeExtract maybe =
   case maybe of
     Just a ->
       a
+
     _ ->
       Debug.crash "unsafeExtract failed"
 

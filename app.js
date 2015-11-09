@@ -12,6 +12,7 @@ Elm.App.make = function (_elm) {
    $moduleName = "App",
    $Basics = Elm.Basics.make(_elm),
    $Board = Elm.Board.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
    $Dict = Elm.Dict.make(_elm),
    $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
    $Graphics$Element = Elm.Graphics.Element.make(_elm),
@@ -20,20 +21,11 @@ Elm.App.make = function (_elm) {
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
+   $Signal$Extra = Elm.Signal.Extra.make(_elm),
    $Touch = Elm.Touch.make(_elm),
    $Utils = Elm.Utils.make(_elm),
    $Window = Elm.Window.make(_elm);
    var windowDimensions = $Window.dimensions;
-   var windowSize = Elm.Native.Port.make(_elm).inbound("windowSize",
-   "(Int, Int)",
-   function (v) {
-      return typeof v === "object" && v instanceof Array ? {ctor: "_Tuple2"
-                                                           ,_0: typeof v[0] === "number" ? v[0] : _U.badPort("a number",
-                                                           v[0])
-                                                           ,_1: typeof v[1] === "number" ? v[1] : _U.badPort("a number",
-                                                           v[1])} : _U.badPort("an array",
-      v);
-   });
    var locationSearch = Elm.Native.Port.make(_elm).inbound("locationSearch",
    "String",
    function (v) {
@@ -55,7 +47,7 @@ Elm.App.make = function (_elm) {
               _v0._0,
               _v0._1)($Board.view(model));}
          _U.badCase($moduleName,
-         "between lines 135 and 136");
+         "between lines 137 and 138");
       }();
    });
    var WindowResize = function (a) {
@@ -142,10 +134,10 @@ Elm.App.make = function (_elm) {
                          queryParams);
                       }();}
                  _U.badCase($moduleName,
-                 "between lines 56 and 65");
+                 "between lines 58 and 67");
               }();}
          _U.badCase($moduleName,
-         "between lines 56 and 65");
+         "between lines 58 and 67");
       }();
    });
    var update = F2(function (action,
@@ -217,11 +209,13 @@ Elm.App.make = function (_elm) {
       maxBoardWidth,
       queryParams);
    }();
-   var initialTileSize = A2(getTileSize,
-   {ctor: "_Tuple2"
-   ,_0: initialWidth
-   ,_1: initialHeight},
-   windowSize);
+   var initialTileSize = function (windowDimensionsValue) {
+      return A2(getTileSize,
+      {ctor: "_Tuple2"
+      ,_0: initialWidth
+      ,_1: initialHeight},
+      windowDimensionsValue);
+   };
    var initialShuffle = function () {
       var maxShuffle = 20000;
       var minShuffle = 0;
@@ -234,19 +228,31 @@ Elm.App.make = function (_elm) {
       maxShuffle,
       queryParams);
    }();
-   var initialModel = function () {
-      var tileSpacing = 1;
-      return $Board.update($Board.Shuffle(initialShuffle))(A5($Board.init,
-      initialSeed,
-      initialWidth,
-      initialHeight,
-      initialTileSize,
-      tileSpacing));
+   var initialModel = function (windowDimensionsValue) {
+      return function () {
+         var tileSpacing = 1;
+         return $Board.update($Board.Shuffle(initialShuffle))(A5($Board.init,
+         initialSeed,
+         initialWidth,
+         initialHeight,
+         initialTileSize(windowDimensionsValue),
+         tileSpacing));
+      }();
+   };
+   var model = function () {
+      var getInitialModel = function (initialInput) {
+         return function () {
+            switch (initialInput.ctor)
+            {case "WindowResize":
+               return initialModel(initialInput._0);}
+            return $Debug.crash("initial action should be WindowResize");
+         }();
+      };
+      return A3($Signal$Extra.foldp$,
+      update,
+      getInitialModel,
+      input);
    }();
-   var model = A3($Signal.foldp,
-   update,
-   initialModel,
-   input);
    var main = A3($Signal.map2,
    view,
    windowDimensions,
@@ -276,99 +282,6 @@ Elm.App.make = function (_elm) {
                      ,model: model
                      ,main: main};
    return _elm.App.values;
-};
-Elm.Array = Elm.Array || {};
-Elm.Array.make = function (_elm) {
-   "use strict";
-   _elm.Array = _elm.Array || {};
-   if (_elm.Array.values)
-   return _elm.Array.values;
-   var _op = {},
-   _N = Elm.Native,
-   _U = _N.Utils.make(_elm),
-   _L = _N.List.make(_elm),
-   $moduleName = "Array",
-   $Basics = Elm.Basics.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Native$Array = Elm.Native.Array.make(_elm);
-   var append = $Native$Array.append;
-   var length = $Native$Array.length;
-   var isEmpty = function (array) {
-      return _U.eq(length(array),
-      0);
-   };
-   var slice = $Native$Array.slice;
-   var set = $Native$Array.set;
-   var get = F2(function (i,
-   array) {
-      return _U.cmp(0,
-      i) < 1 && _U.cmp(i,
-      $Native$Array.length(array)) < 0 ? $Maybe.Just(A2($Native$Array.get,
-      i,
-      array)) : $Maybe.Nothing;
-   });
-   var push = $Native$Array.push;
-   var empty = $Native$Array.empty;
-   var filter = F2(function (isOkay,
-   arr) {
-      return function () {
-         var update = F2(function (x,
-         xs) {
-            return isOkay(x) ? A2($Native$Array.push,
-            x,
-            xs) : xs;
-         });
-         return A3($Native$Array.foldl,
-         update,
-         $Native$Array.empty,
-         arr);
-      }();
-   });
-   var foldr = $Native$Array.foldr;
-   var foldl = $Native$Array.foldl;
-   var indexedMap = $Native$Array.indexedMap;
-   var map = $Native$Array.map;
-   var toIndexedList = function (array) {
-      return A3($List.map2,
-      F2(function (v0,v1) {
-         return {ctor: "_Tuple2"
-                ,_0: v0
-                ,_1: v1};
-      }),
-      _L.range(0,
-      $Native$Array.length(array) - 1),
-      $Native$Array.toList(array));
-   };
-   var toList = $Native$Array.toList;
-   var fromList = $Native$Array.fromList;
-   var initialize = $Native$Array.initialize;
-   var repeat = F2(function (n,e) {
-      return A2(initialize,
-      n,
-      $Basics.always(e));
-   });
-   var Array = {ctor: "Array"};
-   _elm.Array.values = {_op: _op
-                       ,empty: empty
-                       ,repeat: repeat
-                       ,initialize: initialize
-                       ,fromList: fromList
-                       ,isEmpty: isEmpty
-                       ,length: length
-                       ,push: push
-                       ,append: append
-                       ,get: get
-                       ,set: set
-                       ,slice: slice
-                       ,toList: toList
-                       ,toIndexedList: toIndexedList
-                       ,map: map
-                       ,indexedMap: indexedMap
-                       ,filter: filter
-                       ,foldl: foldl
-                       ,foldr: foldr};
-   return _elm.Array.values;
 };
 Elm.Basics = Elm.Basics || {};
 Elm.Basics.make = function (_elm) {
@@ -708,7 +621,7 @@ Elm.Board.make = function (_elm) {
                        _v14.empty) ? true : _U.eq(_v14.boardWidth * _v16._0 + _v16._1,
                        tile.id);}
                   _U.badCase($moduleName,
-                  "between lines 74 and 76");
+                  "between lines 73 and 75");
                }();
             });
             return A3($Dict.foldr,
@@ -3923,988 +3836,6 @@ Elm.Maybe.make = function (_elm) {
                        ,Nothing: Nothing};
    return _elm.Maybe.values;
 };
-Elm.Native.Array = {};
-Elm.Native.Array.make = function(localRuntime) {
-
-	localRuntime.Native = localRuntime.Native || {};
-	localRuntime.Native.Array = localRuntime.Native.Array || {};
-	if (localRuntime.Native.Array.values)
-	{
-		return localRuntime.Native.Array.values;
-	}
-	if ('values' in Elm.Native.Array)
-	{
-		return localRuntime.Native.Array.values = Elm.Native.Array.values;
-	}
-
-	var List = Elm.Native.List.make(localRuntime);
-
-	// A RRB-Tree has two distinct data types.
-	// Leaf -> "height"  is always 0
-	//         "table"   is an array of elements
-	// Node -> "height"  is always greater than 0
-	//         "table"   is an array of child nodes
-	//         "lengths" is an array of accumulated lengths of the child nodes
-
-	// M is the maximal table size. 32 seems fast. E is the allowed increase
-	// of search steps when concatting to find an index. Lower values will
-	// decrease balancing, but will increase search steps.
-	var M = 32;
-	var E = 2;
-
-	// An empty array.
-	var empty = {
-		ctor: "_Array",
-		height: 0,
-		table: new Array()
-	};
-
-
-	function get(i, array)
-	{
-		if (i < 0 || i >= length(array))
-		{
-			throw new Error(
-				"Index " + i + " is out of range. Check the length of " +
-				"your array first or use getMaybe or getWithDefault.");
-		}
-		return unsafeGet(i, array);
-	}
-
-
-	function unsafeGet(i, array)
-	{
-		for (var x = array.height; x > 0; x--)
-		{
-			var slot = i >> (x * 5);
-			while (array.lengths[slot] <= i)
-			{
-				slot++;
-			}
-			if (slot > 0)
-			{
-				i -= array.lengths[slot - 1];
-			}
-			array = array.table[slot];
-		}
-		return array.table[i];
-	}
-
-
-	// Sets the value at the index i. Only the nodes leading to i will get
-	// copied and updated.
-	function set(i, item, array)
-	{
-		if (i < 0 || length(array) <= i)
-		{
-			return array;
-		}
-		return unsafeSet(i, item, array);
-	}
-
-
-	function unsafeSet(i, item, array)
-	{
-		array = nodeCopy(array);
-
-		if (array.height == 0)
-		{
-			array.table[i] = item;
-		}
-		else
-		{
-			var slot = getSlot(i, array);
-			if (slot > 0)
-			{
-				i -= array.lengths[slot - 1];
-			}
-			array.table[slot] = unsafeSet(i, item, array.table[slot]);
-		}
-		return array;
-	}
-
-
-	function initialize(len, f)
-	{
-		if (len == 0)
-		{
-			return empty;
-		}
-		var h = Math.floor( Math.log(len) / Math.log(M) );
-		return initialize_(f, h, 0, len);
-	}
-
-	function initialize_(f, h, from, to)
-	{
-		if (h == 0)
-		{
-			var table = new Array((to - from) % (M + 1));
-			for (var i = 0; i < table.length; i++)
-			{
-			  table[i] = f(from + i);
-			}
-			return {
-				ctor: "_Array",
-				height: 0,
-				table: table
-			};
-		}
-
-		var step = Math.pow(M, h);
-		var table = new Array(Math.ceil((to - from) / step));
-		var lengths = new Array(table.length);
-		for (var i = 0; i < table.length; i++)
-		{
-			table[i] = initialize_(f, h - 1, from + (i * step), Math.min(from + ((i + 1) * step), to));
-			lengths[i] = length(table[i]) + (i > 0 ? lengths[i-1] : 0);
-		}
-		return {
-			ctor: "_Array",
-			height: h,
-			table: table,
-			lengths: lengths
-		};
-	}
-
-	function fromList(list)
-	{
-		if (list == List.Nil)
-		{
-			return empty;
-		}
-
-		// Allocate M sized blocks (table) and write list elements to it.
-		var table = new Array(M);
-		var nodes = new Array();
-		var i = 0;
-
-		while (list.ctor !== '[]')
-		{
-			table[i] = list._0;
-			list = list._1;
-			i++;
-
-			// table is full, so we can push a leaf containing it into the
-			// next node.
-			if (i == M)
-			{
-				var leaf = {
-					ctor: "_Array",
-					height: 0,
-					table: table
-				};
-				fromListPush(leaf, nodes);
-				table = new Array(M);
-				i = 0;
-			}
-		}
-
-		// Maybe there is something left on the table.
-		if (i > 0)
-		{
-			var leaf = {
-				ctor: "_Array",
-				height: 0,
-				table: table.splice(0,i)
-			};
-			fromListPush(leaf, nodes);
-		}
-
-		// Go through all of the nodes and eventually push them into higher nodes.
-		for (var h = 0; h < nodes.length - 1; h++)
-		{
-			if (nodes[h].table.length > 0)
-			{
-				fromListPush(nodes[h], nodes);
-			}
-		}
-
-		var head = nodes[nodes.length - 1];
-		if (head.height > 0 && head.table.length == 1)
-		{
-			return head.table[0];
-		}
-		else
-		{
-			return head;
-		}
-	}
-
-	// Push a node into a higher node as a child.
-	function fromListPush(toPush, nodes)
-	{
-		var h = toPush.height;
-
-		// Maybe the node on this height does not exist.
-		if (nodes.length == h)
-		{
-			var node = {
-				ctor: "_Array",
-				height: h + 1,
-				table: new Array(),
-				lengths: new Array()
-			};
-			nodes.push(node);
-		}
-
-		nodes[h].table.push(toPush);
-		var len = length(toPush);
-		if (nodes[h].lengths.length > 0)
-		{
-			len += nodes[h].lengths[nodes[h].lengths.length - 1];
-		}
-		nodes[h].lengths.push(len);
-
-		if (nodes[h].table.length == M)
-		{
-			fromListPush(nodes[h], nodes);
-			nodes[h] = {
-				ctor: "_Array",
-				height: h + 1,
-				table: new Array(),
-				lengths: new Array()
-			};
-		}
-	}
-
-	// Pushes an item via push_ to the bottom right of a tree.
-	function push(item, a)
-	{
-		var pushed = push_(item, a);
-		if (pushed !== null)
-		{
-			return pushed;
-		}
-
-		var newTree = create(item, a.height);
-		return siblise(a, newTree);
-	}
-
-	// Recursively tries to push an item to the bottom-right most
-	// tree possible. If there is no space left for the item,
-	// null will be returned.
-	function push_(item, a)
-	{
-		// Handle resursion stop at leaf level.
-		if (a.height == 0)
-		{
-			if (a.table.length < M)
-			{
-				var newA = {
-					ctor: "_Array",
-					height: 0,
-					table: a.table.slice()
-				};
-				newA.table.push(item);
-				return newA;
-			}
-			else
-			{
-			  return null;
-			}
-		}
-
-		// Recursively push
-		var pushed = push_(item, botRight(a));
-
-		// There was space in the bottom right tree, so the slot will
-		// be updated.
-		if (pushed != null)
-		{
-			var newA = nodeCopy(a);
-			newA.table[newA.table.length - 1] = pushed;
-			newA.lengths[newA.lengths.length - 1]++;
-			return newA;
-		}
-
-		// When there was no space left, check if there is space left
-		// for a new slot with a tree which contains only the item
-		// at the bottom.
-		if (a.table.length < M)
-		{
-			var newSlot = create(item, a.height - 1);
-			var newA = nodeCopy(a);
-			newA.table.push(newSlot);
-			newA.lengths.push(newA.lengths[newA.lengths.length - 1] + length(newSlot));
-			return newA;
-		}
-		else
-		{
-			return null;
-		}
-	}
-
-	// Converts an array into a list of elements.
-	function toList(a)
-	{
-		return toList_(List.Nil, a);
-	}
-
-	function toList_(list, a)
-	{
-		for (var i = a.table.length - 1; i >= 0; i--)
-		{
-			list =
-				a.height == 0
-					? List.Cons(a.table[i], list)
-					: toList_(list, a.table[i]);
-		}
-		return list;
-	}
-
-	// Maps a function over the elements of an array.
-	function map(f, a)
-	{
-		var newA = {
-			ctor: "_Array",
-			height: a.height,
-			table: new Array(a.table.length)
-		};
-		if (a.height > 0)
-		{
-			newA.lengths = a.lengths;
-		}
-		for (var i = 0; i < a.table.length; i++)
-		{
-			newA.table[i] =
-				a.height == 0
-					? f(a.table[i])
-					: map(f, a.table[i]);
-		}
-		return newA;
-	}
-
-	// Maps a function over the elements with their index as first argument.
-	function indexedMap(f, a)
-	{
-		return indexedMap_(f, a, 0);
-	}
-
-	function indexedMap_(f, a, from)
-	{
-		var newA = {
-			ctor: "_Array",
-			height: a.height,
-			table: new Array(a.table.length)
-		};
-		if (a.height > 0)
-		{
-			newA.lengths = a.lengths;
-		}
-		for (var i = 0; i < a.table.length; i++)
-		{
-			newA.table[i] =
-				a.height == 0
-					? A2(f, from + i, a.table[i])
-					: indexedMap_(f, a.table[i], i == 0 ? 0 : a.lengths[i - 1]);
-		}
-		return newA;
-	}
-
-	function foldl(f, b, a)
-	{
-		if (a.height == 0)
-		{
-			for (var i = 0; i < a.table.length; i++)
-			{
-				b = A2(f, a.table[i], b);
-			}
-		}
-		else
-		{
-			for (var i = 0; i < a.table.length; i++)
-			{
-				b = foldl(f, b, a.table[i]);
-			}
-		}
-		return b;
-	}
-
-	function foldr(f, b, a)
-	{
-		if (a.height == 0)
-		{
-			for (var i = a.table.length; i--; )
-			{
-				b = A2(f, a.table[i], b);
-			}
-		}
-		else
-		{
-			for (var i = a.table.length; i--; )
-			{
-				b = foldr(f, b, a.table[i]);
-			}
-		}
-		return b;
-	}
-
-	// TODO: currently, it slices the right, then the left. This can be
-	// optimized.
-	function slice(from, to, a)
-	{
-		if (from < 0)
-		{
-			from += length(a);
-		}
-		if (to < 0)
-		{
-			to += length(a);
-		}
-		return sliceLeft(from, sliceRight(to, a));
-	}
-
-	function sliceRight(to, a)
-	{
-		if (to == length(a))
-		{
-			return a;
-		}
-
-		// Handle leaf level.
-		if (a.height == 0)
-		{
-			var newA = { ctor:"_Array", height:0 };
-			newA.table = a.table.slice(0, to);
-			return newA;
-		}
-
-		// Slice the right recursively.
-		var right = getSlot(to, a);
-		var sliced = sliceRight(to - (right > 0 ? a.lengths[right - 1] : 0), a.table[right]);
-
-		// Maybe the a node is not even needed, as sliced contains the whole slice.
-		if (right == 0)
-		{
-			return sliced;
-		}
-
-		// Create new node.
-		var newA = {
-			ctor: "_Array",
-			height: a.height,
-			table: a.table.slice(0, right),
-			lengths: a.lengths.slice(0, right)
-		};
-		if (sliced.table.length > 0)
-		{
-			newA.table[right] = sliced;
-			newA.lengths[right] = length(sliced) + (right > 0 ? newA.lengths[right - 1] : 0);
-		}
-		return newA;
-	}
-
-	function sliceLeft(from, a)
-	{
-		if (from == 0)
-		{
-			return a;
-		}
-
-		// Handle leaf level.
-		if (a.height == 0)
-		{
-			var newA = { ctor:"_Array", height:0 };
-			newA.table = a.table.slice(from, a.table.length + 1);
-			return newA;
-		}
-
-		// Slice the left recursively.
-		var left = getSlot(from, a);
-		var sliced = sliceLeft(from - (left > 0 ? a.lengths[left - 1] : 0), a.table[left]);
-
-		// Maybe the a node is not even needed, as sliced contains the whole slice.
-		if (left == a.table.length - 1)
-		{
-			return sliced;
-		}
-
-		// Create new node.
-		var newA = {
-			ctor: "_Array",
-			height: a.height,
-			table: a.table.slice(left, a.table.length + 1),
-			lengths: new Array(a.table.length - left)
-		};
-		newA.table[0] = sliced;
-		var len = 0;
-		for (var i = 0; i < newA.table.length; i++)
-		{
-			len += length(newA.table[i]);
-			newA.lengths[i] = len;
-		}
-
-		return newA;
-	}
-
-	// Appends two trees.
-	function append(a,b)
-	{
-		if (a.table.length === 0)
-		{
-			return b;
-		}
-		if (b.table.length === 0)
-		{
-			return a;
-		}
-
-		var c = append_(a, b);
-
-		// Check if both nodes can be crunshed together.
-		if (c[0].table.length + c[1].table.length <= M)
-		{
-			if (c[0].table.length === 0)
-			{
-				return c[1];
-			}
-			if (c[1].table.length === 0)
-			{
-				return c[0];
-			}
-
-			// Adjust .table and .lengths
-			c[0].table = c[0].table.concat(c[1].table);
-			if (c[0].height > 0)
-			{
-				var len = length(c[0]);
-				for (var i = 0; i < c[1].lengths.length; i++)
-				{
-					c[1].lengths[i] += len;
-				}
-				c[0].lengths = c[0].lengths.concat(c[1].lengths);
-			}
-
-			return c[0];
-		}
-
-		if (c[0].height > 0)
-		{
-			var toRemove = calcToRemove(a, b);
-			if (toRemove > E)
-			{
-				c = shuffle(c[0], c[1], toRemove);
-			}
-		}
-
-		return siblise(c[0], c[1]);
-	}
-
-	// Returns an array of two nodes; right and left. One node _may_ be empty.
-	function append_(a, b)
-	{
-		if (a.height === 0 && b.height === 0)
-		{
-			return [a, b];
-		}
-
-		if (a.height !== 1 || b.height !== 1)
-		{
-			if (a.height === b.height)
-			{
-				a = nodeCopy(a);
-				b = nodeCopy(b);
-				var appended = append_(botRight(a), botLeft(b));
-
-				insertRight(a, appended[1]);
-				insertLeft(b, appended[0]);
-			}
-			else if (a.height > b.height)
-			{
-				a = nodeCopy(a);
-				var appended = append_(botRight(a), b);
-
-				insertRight(a, appended[0]);
-				b = parentise(appended[1], appended[1].height + 1);
-			}
-			else
-			{
-				b = nodeCopy(b);
-				var appended = append_(a, botLeft(b));
-
-				var left = appended[0].table.length === 0 ? 0 : 1;
-				var right = left === 0 ? 1 : 0;
-				insertLeft(b, appended[left]);
-				a = parentise(appended[right], appended[right].height + 1);
-			}
-		}
-
-		// Check if balancing is needed and return based on that.
-		if (a.table.length === 0 || b.table.length === 0)
-		{
-			return [a,b];
-		}
-
-		var toRemove = calcToRemove(a, b);
-		if (toRemove <= E)
-		{
-			return [a,b];
-		}
-		return shuffle(a, b, toRemove);
-	}
-
-	// Helperfunctions for append_. Replaces a child node at the side of the parent.
-	function insertRight(parent, node)
-	{
-		var index = parent.table.length - 1;
-		parent.table[index] = node;
-		parent.lengths[index] = length(node)
-		parent.lengths[index] += index > 0 ? parent.lengths[index - 1] : 0;
-	}
-
-	function insertLeft(parent, node)
-	{
-		if (node.table.length > 0)
-		{
-			parent.table[0] = node;
-			parent.lengths[0] = length(node);
-
-			var len = length(parent.table[0]);
-			for (var i = 1; i < parent.lengths.length; i++)
-			{
-				len += length(parent.table[i]);
-				parent.lengths[i] = len;
-			}
-		}
-		else
-		{
-			parent.table.shift();
-			for (var i = 1; i < parent.lengths.length; i++)
-			{
-				parent.lengths[i] = parent.lengths[i] - parent.lengths[0];
-			}
-			parent.lengths.shift();
-		}
-	}
-
-	// Returns the extra search steps for E. Refer to the paper.
-	function calcToRemove(a, b)
-	{
-		var subLengths = 0;
-		for (var i = 0; i < a.table.length; i++)
-		{
-			subLengths += a.table[i].table.length;
-		}
-		for (var i = 0; i < b.table.length; i++)
-		{
-			subLengths += b.table[i].table.length;
-		}
-
-		var toRemove = a.table.length + b.table.length
-		return toRemove - (Math.floor((subLengths - 1) / M) + 1);
-	}
-
-	// get2, set2 and saveSlot are helpers for accessing elements over two arrays.
-	function get2(a, b, index)
-	{
-		return index < a.length
-			? a[index]
-			: b[index - a.length];
-	}
-
-	function set2(a, b, index, value)
-	{
-		if (index < a.length)
-		{
-			a[index] = value;
-		}
-		else
-		{
-			b[index - a.length] = value;
-		}
-	}
-
-	function saveSlot(a, b, index, slot)
-	{
-		set2(a.table, b.table, index, slot);
-
-		var l = (index == 0 || index == a.lengths.length)
-			? 0
-			: get2(a.lengths, a.lengths, index - 1);
-
-		set2(a.lengths, b.lengths, index, l + length(slot));
-	}
-
-	// Creates a node or leaf with a given length at their arrays for perfomance.
-	// Is only used by shuffle.
-	function createNode(h, length)
-	{
-		if (length < 0)
-		{
-			length = 0;
-		}
-		var a = {
-			ctor: "_Array",
-			height: h,
-			table: new Array(length)
-		};
-		if (h > 0)
-		{
-			a.lengths = new Array(length);
-		}
-		return a;
-	}
-
-	// Returns an array of two balanced nodes.
-	function shuffle(a, b, toRemove)
-	{
-		var newA = createNode(a.height, Math.min(M, a.table.length + b.table.length - toRemove));
-		var newB = createNode(a.height, newA.table.length - (a.table.length + b.table.length - toRemove));
-
-		// Skip the slots with size M. More precise: copy the slot references
-		// to the new node
-		var read = 0;
-		while (get2(a.table, b.table, read).table.length % M == 0)
-		{
-			set2(newA.table, newB.table, read, get2(a.table, b.table, read));
-			set2(newA.lengths, newB.lengths, read, get2(a.lengths, b.lengths, read));
-			read++;
-		}
-
-		// Pulling items from left to right, caching in a slot before writing
-		// it into the new nodes.
-		var write = read;
-		var slot = new createNode(a.height - 1, 0);
-		var from = 0;
-
-		// If the current slot is still containing data, then there will be at
-		// least one more write, so we do not break this loop yet.
-		while (read - write - (slot.table.length > 0 ? 1 : 0) < toRemove)
-		{
-			// Find out the max possible items for copying.
-			var source = get2(a.table, b.table, read);
-			var to = Math.min(M - slot.table.length, source.table.length)
-
-			// Copy and adjust size table.
-			slot.table = slot.table.concat(source.table.slice(from, to));
-			if (slot.height > 0)
-			{
-				var len = slot.lengths.length;
-				for (var i = len; i < len + to - from; i++)
-				{
-					slot.lengths[i] = length(slot.table[i]);
-					slot.lengths[i] += (i > 0 ? slot.lengths[i - 1] : 0);
-				}
-			}
-
-			from += to;
-
-			// Only proceed to next slots[i] if the current one was
-			// fully copied.
-			if (source.table.length <= to)
-			{
-				read++; from = 0;
-			}
-
-			// Only create a new slot if the current one is filled up.
-			if (slot.table.length == M)
-			{
-				saveSlot(newA, newB, write, slot);
-				slot = createNode(a.height - 1,0);
-				write++;
-			}
-		}
-
-		// Cleanup after the loop. Copy the last slot into the new nodes.
-		if (slot.table.length > 0)
-		{
-			saveSlot(newA, newB, write, slot);
-			write++;
-		}
-
-		// Shift the untouched slots to the left
-		while (read < a.table.length + b.table.length )
-		{
-			saveSlot(newA, newB, write, get2(a.table, b.table, read));
-			read++;
-			write++;
-		}
-
-		return [newA, newB];
-	}
-
-	// Navigation functions
-	function botRight(a)
-	{
-		return a.table[a.table.length - 1];
-	}
-	function botLeft(a)
-	{
-		return a.table[0];
-	}
-
-	// Copies a node for updating. Note that you should not use this if
-	// only updating only one of "table" or "lengths" for performance reasons.
-	function nodeCopy(a)
-	{
-		var newA = {
-			ctor: "_Array",
-			height: a.height,
-			table: a.table.slice()
-		};
-		if (a.height > 0)
-		{
-			newA.lengths = a.lengths.slice();
-		}
-		return newA;
-	}
-
-	// Returns how many items are in the tree.
-	function length(array)
-	{
-		if (array.height == 0)
-		{
-			return array.table.length;
-		}
-		else
-		{
-			return array.lengths[array.lengths.length - 1];
-		}
-	}
-
-	// Calculates in which slot of "table" the item probably is, then
-	// find the exact slot via forward searching in  "lengths". Returns the index.
-	function getSlot(i, a)
-	{
-		var slot = i >> (5 * a.height);
-		while (a.lengths[slot] <= i)
-		{
-			slot++;
-		}
-		return slot;
-	}
-
-	// Recursively creates a tree with a given height containing
-	// only the given item.
-	function create(item, h)
-	{
-		if (h == 0)
-		{
-			return {
-				ctor: "_Array",
-				height: 0,
-				table: [item]
-			};
-		}
-		return {
-			ctor: "_Array",
-			height: h,
-			table: [create(item, h - 1)],
-			lengths: [1]
-		};
-	}
-
-	// Recursively creates a tree that contains the given tree.
-	function parentise(tree, h)
-	{
-		if (h == tree.height)
-		{
-			return tree;
-		}
-
-		return {
-			ctor: "_Array",
-			height: h,
-			table: [parentise(tree, h - 1)],
-			lengths: [length(tree)]
-		};
-	}
-
-	// Emphasizes blood brotherhood beneath two trees.
-	function siblise(a, b)
-	{
-		return {
-			ctor: "_Array",
-			height: a.height + 1,
-			table: [a, b],
-			lengths: [length(a), length(a) + length(b)]
-		};
-	}
-
-	function toJSArray(a)
-	{
-		var jsArray = new Array(length(a));
-		toJSArray_(jsArray, 0, a);
-		return jsArray;
-	}
-
-	function toJSArray_(jsArray, i, a)
-	{
-		for (var t = 0; t < a.table.length; t++)
-		{
-			if (a.height == 0)
-			{
-				jsArray[i + t] = a.table[t];
-			}
-			else
-			{
-				var inc = t == 0 ? 0 : a.lengths[t - 1];
-				toJSArray_(jsArray, i + inc, a.table[t]);
-			}
-		}
-	}
-
-	function fromJSArray(jsArray)
-	{
-		if (jsArray.length == 0)
-		{
-			return empty;
-		}
-		var h = Math.floor(Math.log(jsArray.length) / Math.log(M));
-		return fromJSArray_(jsArray, h, 0, jsArray.length);
-	}
-
-	function fromJSArray_(jsArray, h, from, to)
-	{
-		if (h == 0)
-		{
-			return {
-				ctor: "_Array",
-				height: 0,
-				table: jsArray.slice(from, to)
-			};
-		}
-
-		var step = Math.pow(M, h);
-		var table = new Array(Math.ceil((to - from) / step));
-		var lengths = new Array(table.length);
-		for (var i = 0; i < table.length; i++)
-		{
-			table[i] = fromJSArray_(jsArray, h - 1, from + (i * step), Math.min(from + ((i + 1) * step), to));
-			lengths[i] = length(table[i]) + (i > 0 ? lengths[i-1] : 0);
-		}
-		return {
-			ctor: "_Array",
-			height: h,
-			table: table,
-			lengths: lengths
-		};
-	}
-
-	Elm.Native.Array.values = {
-		empty: empty,
-		fromList: fromList,
-		toList: toList,
-		initialize: F2(initialize),
-		append: F2(append),
-		push: F2(push),
-		slice: F3(slice),
-		get: F2(get),
-		set: F3(set),
-		map: F2(map),
-		indexedMap: F2(indexedMap),
-		foldl: F3(foldl),
-		foldr: F3(foldr),
-		length: length,
-
-		toJSArray:toJSArray,
-		fromJSArray:fromJSArray
-	};
-
-	return localRuntime.Native.Array.values = Elm.Native.Array.values;
-
-}
-
 Elm.Native.Basics = {};
 Elm.Native.Basics.make = function(localRuntime) {
 
@@ -10730,6 +9661,548 @@ Elm.Signal.make = function (_elm) {
                         ,Mailbox: Mailbox};
    return _elm.Signal.values;
 };
+Elm.Signal = Elm.Signal || {};
+Elm.Signal.Extra = Elm.Signal.Extra || {};
+Elm.Signal.Extra.make = function (_elm) {
+   "use strict";
+   _elm.Signal = _elm.Signal || {};
+   _elm.Signal.Extra = _elm.Signal.Extra || {};
+   if (_elm.Signal.Extra.values)
+   return _elm.Signal.Extra.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Signal.Extra",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var passiveMap2 = F2(function (func,
+   a) {
+      return function ($) {
+         return A2($Signal.map2,
+         func,
+         a)($Signal.sampleOn(a)($));
+      };
+   });
+   var withPassive = passiveMap2(F2(function (x,
+   y) {
+      return x(y);
+   }));
+   var combine = A2($List.foldr,
+   $Signal.map2(F2(function (x,y) {
+      return A2($List._op["::"],
+      x,
+      y);
+   })),
+   $Signal.constant(_L.fromArray([])));
+   var mapMany = F2(function (f,
+   l) {
+      return A2($Signal._op["<~"],
+      f,
+      combine(l));
+   });
+   var applyMany = F2(function (fs,
+   l) {
+      return A2($Signal._op["~"],
+      fs,
+      combine(l));
+   });
+   var mergeMany = F2(function (original,
+   others) {
+      return A3($List.foldl,
+      $Signal.merge,
+      original,
+      others);
+   });
+   var filter = function (initial) {
+      return A2($Signal.filterMap,
+      $Basics.identity,
+      initial);
+   };
+   var keepIf = $Signal.filter;
+   var runBuffer$ = F3(function (l,
+   n,
+   input) {
+      return function () {
+         var f = F2(function (inp,
+         prev) {
+            return function () {
+               var l = $List.length(prev);
+               return _U.cmp(l,
+               n) < 0 ? A2($Basics._op["++"],
+               prev,
+               _L.fromArray([inp])) : A2($Basics._op["++"],
+               A2($List.drop,l - n + 1,prev),
+               _L.fromArray([inp]));
+            }();
+         });
+         return A3($Signal.foldp,
+         f,
+         l,
+         input);
+      }();
+   });
+   var runBuffer = runBuffer$(_L.fromArray([]));
+   var foldps = F3(function (f,
+   bs,
+   aS) {
+      return A2($Signal._op["<~"],
+      $Basics.fst,
+      A3($Signal.foldp,
+      F2(function (a,_v0) {
+         return function () {
+            switch (_v0.ctor)
+            {case "_Tuple2": return A2(f,
+                 a,
+                 _v0._1);}
+            _U.badCase($moduleName,
+            "on line 174, column 29 to 34");
+         }();
+      }),
+      bs,
+      aS));
+   });
+   var delayRound = F2(function (b,
+   bS) {
+      return A3(foldps,
+      F2(function ($new,old) {
+         return {ctor: "_Tuple2"
+                ,_0: old
+                ,_1: $new};
+      }),
+      {ctor: "_Tuple2",_0: b,_1: b},
+      bS);
+   });
+   var filterFold = F2(function (f,
+   initial) {
+      return function () {
+         var f$ = F2(function (a,s) {
+            return function () {
+               var res = A2(f,a,s);
+               return {ctor: "_Tuple2"
+                      ,_0: res
+                      ,_1: A2($Maybe.withDefault,
+                      s,
+                      res)};
+            }();
+         });
+         return function ($) {
+            return filter(initial)(A2(foldps,
+            f$,
+            {ctor: "_Tuple2"
+            ,_0: $Maybe.Just(initial)
+            ,_1: initial})($));
+         };
+      }();
+   });
+   var initSignal = function (s) {
+      return A2($Signal.sampleOn,
+      $Signal.constant({ctor: "_Tuple0"}),
+      s);
+   };
+   var switchHelper = F4(function (filter,
+   b,
+   l,
+   r) {
+      return function () {
+         var fromJust = function (_v4) {
+            return function () {
+               switch (_v4.ctor)
+               {case "Just": return _v4._0;}
+               _U.badCase($moduleName,
+               "on line 285, column 25 to 26");
+            }();
+         };
+         var lAndR = A2($Signal.merge,
+         A3(filter,
+         b,
+         $Maybe.Nothing,
+         A2($Signal._op["<~"],
+         $Maybe.Just,
+         l)),
+         A3(filter,
+         A2($Signal._op["<~"],
+         $Basics.not,
+         b),
+         $Maybe.Nothing,
+         A2($Signal._op["<~"],
+         $Maybe.Just,
+         r)));
+         var base = A2($Signal._op["~"],
+         A2($Signal._op["~"],
+         A2($Signal._op["<~"],
+         F3(function (bi,li,ri) {
+            return $Maybe.Just(bi ? li : ri);
+         }),
+         initSignal(b)),
+         initSignal(l)),
+         initSignal(r));
+         return A2($Signal._op["<~"],
+         fromJust,
+         A2($Signal.merge,base,lAndR));
+      }();
+   });
+   var unzip4 = function (pairS) {
+      return {ctor: "_Tuple4"
+             ,_0: A2($Signal._op["<~"],
+             function (_v7) {
+                return function () {
+                   switch (_v7.ctor)
+                   {case "_Tuple4": return _v7._0;}
+                   _U.badCase($moduleName,
+                   "on line 134, column 19 to 20");
+                }();
+             },
+             pairS)
+             ,_1: A2($Signal._op["<~"],
+             function (_v13) {
+                return function () {
+                   switch (_v13.ctor)
+                   {case "_Tuple4":
+                      return _v13._1;}
+                   _U.badCase($moduleName,
+                   "on line 134, column 47 to 48");
+                }();
+             },
+             pairS)
+             ,_2: A2($Signal._op["<~"],
+             function (_v19) {
+                return function () {
+                   switch (_v19.ctor)
+                   {case "_Tuple4":
+                      return _v19._2;}
+                   _U.badCase($moduleName,
+                   "on line 134, column 75 to 76");
+                }();
+             },
+             pairS)
+             ,_3: A2($Signal._op["<~"],
+             function (_v25) {
+                return function () {
+                   switch (_v25.ctor)
+                   {case "_Tuple4":
+                      return _v25._3;}
+                   _U.badCase($moduleName,
+                   "on line 134, column 103 to 104");
+                }();
+             },
+             pairS)};
+   };
+   var unzip3 = function (pairS) {
+      return {ctor: "_Tuple3"
+             ,_0: A2($Signal._op["<~"],
+             function (_v31) {
+                return function () {
+                   switch (_v31.ctor)
+                   {case "_Tuple3":
+                      return _v31._0;}
+                   _U.badCase($moduleName,
+                   "on line 128, column 17 to 18");
+                }();
+             },
+             pairS)
+             ,_1: A2($Signal._op["<~"],
+             function (_v36) {
+                return function () {
+                   switch (_v36.ctor)
+                   {case "_Tuple3":
+                      return _v36._1;}
+                   _U.badCase($moduleName,
+                   "on line 128, column 43 to 44");
+                }();
+             },
+             pairS)
+             ,_2: A2($Signal._op["<~"],
+             function (_v41) {
+                return function () {
+                   switch (_v41.ctor)
+                   {case "_Tuple3":
+                      return _v41._2;}
+                   _U.badCase($moduleName,
+                   "on line 128, column 69 to 70");
+                }();
+             },
+             pairS)};
+   };
+   var unzip = function (pairS) {
+      return {ctor: "_Tuple2"
+             ,_0: A2($Signal._op["<~"],
+             $Basics.fst,
+             pairS)
+             ,_1: A2($Signal._op["<~"],
+             $Basics.snd,
+             pairS)};
+   };
+   var zip4 = $Signal.map4(F4(function (v0,
+   v1,
+   v2,
+   v3) {
+      return {ctor: "_Tuple4"
+             ,_0: v0
+             ,_1: v1
+             ,_2: v2
+             ,_3: v3};
+   }));
+   var zip3 = $Signal.map3(F3(function (v0,
+   v1,
+   v2) {
+      return {ctor: "_Tuple3"
+             ,_0: v0
+             ,_1: v1
+             ,_2: v2};
+   }));
+   var zip = $Signal.map2(F2(function (v0,
+   v1) {
+      return {ctor: "_Tuple2"
+             ,_0: v0
+             ,_1: v1};
+   }));
+   var keepWhen = F3(function (boolSig,
+   a,
+   aSig) {
+      return $Signal.map($Basics.snd)(A2(keepIf,
+      $Basics.fst,
+      {ctor: "_Tuple2"
+      ,_0: true
+      ,_1: a})($Signal.sampleOn(aSig)(A2(zip,
+      boolSig,
+      aSig))));
+   });
+   var switchWhen = F3(function (b,
+   l,
+   r) {
+      return A4(switchHelper,
+      keepWhen,
+      b,
+      l,
+      r);
+   });
+   var sampleWhen = F3(function (bs,
+   def,
+   sig) {
+      return $Signal.map($Basics.snd)(A2(keepIf,
+      $Basics.fst,
+      {ctor: "_Tuple2"
+      ,_0: true
+      ,_1: def})(A2(zip,bs,sig)));
+   });
+   var switchSample = F3(function (b,
+   l,
+   r) {
+      return A4(switchHelper,
+      sampleWhen,
+      b,
+      l,
+      r);
+   });
+   var keepThen = F3(function (choice,
+   base,
+   signal) {
+      return A2(switchSample,
+      choice,
+      signal)($Signal.constant(base));
+   });
+   var andMap = F2(function (x,y) {
+      return A2($Signal._op["~"],
+      x,
+      y);
+   });
+   _op["~>"] = $Basics.flip($Signal.map);
+   var foldp$ = F3(function (fun,
+   initFun,
+   input) {
+      return function () {
+         var fromJust = function (_v46) {
+            return function () {
+               switch (_v46.ctor)
+               {case "Just": return _v46._0;}
+               _U.badCase($moduleName,
+               "on line 161, column 25 to 26");
+            }();
+         };
+         var fun$ = F2(function (_v49,
+         mb) {
+            return function () {
+               switch (_v49.ctor)
+               {case "_Tuple2":
+                  return $Maybe.Just(fun(_v49._0)(A2($Maybe.withDefault,
+                    _v49._1,
+                    mb)));}
+               _U.badCase($moduleName,
+               "between lines 158 and 159");
+            }();
+         });
+         var initial = A2(_op["~>"],
+         initSignal(input),
+         initFun);
+         var rest = A3($Signal.foldp,
+         fun$,
+         $Maybe.Nothing,
+         A2(zip,input,initial));
+         return A2($Signal._op["<~"],
+         fromJust,
+         A2($Signal.merge,
+         A2($Signal._op["<~"],
+         $Maybe.Just,
+         initial),
+         rest));
+      }();
+   });
+   var foldps$ = F3(function (f,
+   iF,
+   aS) {
+      return A2($Signal._op["<~"],
+      $Basics.fst,
+      A3(foldp$,
+      F2(function (a,_v53) {
+         return function () {
+            switch (_v53.ctor)
+            {case "_Tuple2": return A2(f,
+                 a,
+                 _v53._1);}
+            _U.badCase($moduleName,
+            "on line 180, column 46 to 51");
+         }();
+      }),
+      iF,
+      aS));
+   });
+   var deltas = function (signal) {
+      return function () {
+         var initial = function (value) {
+            return {ctor: "_Tuple2"
+                   ,_0: value
+                   ,_1: value};
+         };
+         var step = F2(function (value,
+         delta) {
+            return {ctor: "_Tuple2"
+                   ,_0: $Basics.snd(delta)
+                   ,_1: value};
+         });
+         return A3(foldp$,
+         step,
+         initial,
+         signal);
+      }();
+   };
+   var foldpWith = F4(function (unpack,
+   step,
+   init,
+   input) {
+      return function () {
+         var step$ = F2(function (a,
+         _v57) {
+            return function () {
+               switch (_v57.ctor)
+               {case "_Tuple2":
+                  return unpack(A2(step,
+                    a,
+                    _v57._1));}
+               _U.badCase($moduleName,
+               "on line 194, column 7 to 25");
+            }();
+         });
+         return A2(_op["~>"],
+         A3($Signal.foldp,
+         step$,
+         init,
+         input),
+         $Basics.fst);
+      }();
+   });
+   var keepWhenI = F2(function (fs,
+   s) {
+      return function () {
+         var fromJust = function (_v61) {
+            return function () {
+               switch (_v61.ctor)
+               {case "Just": return _v61._0;}
+               _U.badCase($moduleName,
+               "on line 331, column 25 to 26");
+            }();
+         };
+         return A2(_op["~>"],
+         A3(keepWhen,
+         A2($Signal.merge,
+         $Signal.constant(true),
+         fs),
+         $Maybe.Nothing,
+         A2($Signal._op["<~"],
+         $Maybe.Just,
+         s)),
+         fromJust);
+      }();
+   });
+   var fairMerge = F3(function (resolve,
+   left,
+   right) {
+      return function () {
+         var merged = A2($Signal.merge,
+         left,
+         right);
+         var boolRight = A2($Signal._op["<~"],
+         $Basics.always(false),
+         right);
+         var boolLeft = A2($Signal._op["<~"],
+         $Basics.always(true),
+         left);
+         var bothUpdated = A2($Signal._op["~"],
+         A2($Signal._op["<~"],
+         F2(function (x,y) {
+            return !_U.eq(x,y);
+         }),
+         A2($Signal.merge,
+         boolLeft,
+         boolRight)),
+         A2($Signal.merge,
+         boolRight,
+         boolLeft));
+         var keep = keepWhenI(bothUpdated);
+         var resolved = A2($Signal._op["~"],
+         A2($Signal._op["<~"],
+         resolve,
+         keep(left)),
+         keep(right));
+         return $Signal.merge(resolved)(merged);
+      }();
+   });
+   _elm.Signal.Extra.values = {_op: _op
+                              ,andMap: andMap
+                              ,zip: zip
+                              ,zip3: zip3
+                              ,zip4: zip4
+                              ,unzip: unzip
+                              ,unzip3: unzip3
+                              ,unzip4: unzip4
+                              ,foldp$: foldp$
+                              ,foldps: foldps
+                              ,foldps$: foldps$
+                              ,runBuffer: runBuffer
+                              ,runBuffer$: runBuffer$
+                              ,deltas: deltas
+                              ,delayRound: delayRound
+                              ,keepIf: keepIf
+                              ,keepWhen: keepWhen
+                              ,sampleWhen: sampleWhen
+                              ,switchWhen: switchWhen
+                              ,keepWhenI: keepWhenI
+                              ,switchSample: switchSample
+                              ,keepThen: keepThen
+                              ,filter: filter
+                              ,filterFold: filterFold
+                              ,fairMerge: fairMerge
+                              ,mergeMany: mergeMany
+                              ,combine: combine
+                              ,mapMany: mapMany
+                              ,applyMany: applyMany
+                              ,passiveMap2: passiveMap2
+                              ,withPassive: withPassive};
+   return _elm.Signal.Extra.values;
+};
 Elm.String = Elm.String || {};
 Elm.String.make = function (_elm) {
    "use strict";
@@ -11483,12 +10956,12 @@ Elm.Utils.make = function (_elm) {
                       max,
                       _v2._0);}
                  _U.badCase($moduleName,
-                 "between lines 47 and 52");
+                 "between lines 48 and 53");
               }();
             case "Nothing":
             return $default;}
          _U.badCase($moduleName,
-         "between lines 42 and 52");
+         "between lines 43 and 53");
       }();
    });
    var queryParams = function (locationSearch) {
@@ -11500,7 +10973,7 @@ Elm.Utils.make = function (_elm) {
             case "UrlParams":
             return _v5._0;}
          _U.badCase($moduleName,
-         "between lines 33 and 38");
+         "between lines 34 and 39");
       }();
    };
    var unsafeExtract = function (maybe) {
