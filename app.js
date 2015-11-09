@@ -142,10 +142,10 @@ Elm.App.make = function (_elm) {
                          queryParams);
                       }();}
                  _U.badCase($moduleName,
-                 "between lines 65 and 74");
+                 "between lines 56 and 65");
               }();}
          _U.badCase($moduleName,
-         "between lines 65 and 74");
+         "between lines 56 and 65");
       }();
    });
    var update = F2(function (action,
@@ -256,9 +256,9 @@ Elm.App.make = function (_elm) {
                      ,initialHeight: initialHeight
                      ,initialTileSize: initialTileSize
                      ,initialShuffle: initialShuffle
-                     ,initialModel: initialModel
                      ,getTileSize: getTileSize
                      ,queryParams: queryParams
+                     ,initialModel: initialModel
                      ,NoOp: NoOp
                      ,ArrowLeft: ArrowLeft
                      ,ArrowRight: ArrowRight

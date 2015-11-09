@@ -51,15 +51,6 @@ initialShuffle =
     Utils.dictGetInt "shuffle" defaultShuffle minShuffle maxShuffle queryParams  
 
 
-initialModel : Model
-initialModel =
-  let
-    tileSpacing = 1
-  in
-    Board.init initialSeed initialWidth initialHeight initialTileSize tileSpacing
-      |> Board.update (Board.Shuffle initialShuffle)
-
-
 getTileSize : (Int, Int) -> (Int, Int) -> Int
 getTileSize (boardWidth, boardHeight) (windowWidth, windowHeight) =
   let
@@ -77,6 +68,15 @@ getTileSize (boardWidth, boardHeight) (windowWidth, windowHeight) =
 queryParams : Dict String String
 queryParams =
   Utils.queryParams locationSearch
+
+
+initialModel : Model
+initialModel =
+  let
+    tileSpacing = 1
+  in
+    Board.init initialSeed initialWidth initialHeight initialTileSize tileSpacing
+      |> Board.update (Board.Shuffle initialShuffle)
 
 
 -- UPDATE
