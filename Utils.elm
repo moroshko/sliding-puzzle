@@ -1,4 +1,10 @@
-module Utils (unsafeExtract, randomListItem, queryParams, dictGetInt) where
+module Utils
+  ( unsafeExtract
+  , randomListItem
+  , queryParams
+  , dictGetInt
+  , listGet
+  ) where
 
 import UrlParameterParser exposing (ParseResult(..), parseSearchString)
 import Random exposing (Seed)
@@ -38,6 +44,7 @@ queryParams locationSearch =
     UrlParams dict ->
       dict
 
+
 dictGetInt : String -> Int -> Int -> Int -> Dict String String -> Int
 dictGetInt key default min max dict =
   case Dict.get key dict of
@@ -51,3 +58,10 @@ dictGetInt key default min max dict =
 
         Ok intValue ->
           clamp min max intValue
+
+
+listGet : Int -> List a -> a
+listGet index list =
+  List.drop index list
+    |> List.head
+    |> unsafeExtract

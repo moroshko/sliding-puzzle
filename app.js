@@ -47,7 +47,7 @@ Elm.App.make = function (_elm) {
               _v0._0,
               _v0._1)($Board.view(model));}
          _U.badCase($moduleName,
-         "between lines 137 and 138");
+         "between lines 144 and 145");
       }();
    });
    var WindowResize = function (a) {
@@ -134,10 +134,10 @@ Elm.App.make = function (_elm) {
                          queryParams);
                       }();}
                  _U.badCase($moduleName,
-                 "between lines 58 and 67");
+                 "between lines 59 and 68");
               }();}
          _U.badCase($moduleName,
-         "between lines 58 and 67");
+         "between lines 59 and 68");
       }();
    });
    var update = F2(function (action,
@@ -230,13 +230,21 @@ Elm.App.make = function (_elm) {
    }();
    var initialModel = function (windowDimensionsValue) {
       return function () {
+         var goal = $Maybe.withDefault("default goal")(A2($Dict.get,
+         "goal",
+         queryParams));
+         var start = $Maybe.withDefault("default start")(A2($Dict.get,
+         "start",
+         queryParams));
          var tileSpacing = 1;
-         return $Board.update($Board.Shuffle(initialShuffle))(A5($Board.init,
+         return $Board.update($Board.Shuffle(initialShuffle))(A7($Board.init,
          initialSeed,
          initialWidth,
          initialHeight,
          initialTileSize(windowDimensionsValue),
-         tileSpacing));
+         tileSpacing,
+         start,
+         goal));
       }();
    };
    var model = function () {
@@ -477,10 +485,12 @@ Elm.Board.make = function (_elm) {
    $Dict = Elm.Dict.make(_elm),
    $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
    $List = Elm.List.make(_elm),
+   $List$Extra = Elm.List.Extra.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Random = Elm.Random.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
+   $String = Elm.String.make(_elm),
    $Text = Elm.Text.make(_elm),
    $Utils = Elm.Utils.make(_elm);
    var renderTile = F3(function (_v0,
@@ -607,36 +617,6 @@ Elm.Board.make = function (_elm) {
          }();
       }();
    });
-   var allTilesInPlace = function (_v14) {
-      return function () {
-         return function () {
-            var tileInPlace = F2(function (_v16,
-            tile) {
-               return function () {
-                  switch (_v16.ctor)
-                  {case "_Tuple2":
-                     return _U.eq({ctor: "_Tuple2"
-                                  ,_0: _v16._0
-                                  ,_1: _v16._1},
-                       _v14.empty) ? true : _U.eq(_v14.boardWidth * _v16._0 + _v16._1,
-                       tile.id);}
-                  _U.badCase($moduleName,
-                  "between lines 73 and 75");
-               }();
-            });
-            return A3($Dict.foldr,
-            F3(function (coords,
-            tile,
-            result) {
-               return result && A2(tileInPlace,
-               coords,
-               tile);
-            }),
-            true,
-            _v14.tiles);
-         }();
-      }();
-   };
    var Shuffle = function (a) {
       return {ctor: "Shuffle"
              ,_0: a};
@@ -656,8 +636,20 @@ Elm.Board.make = function (_elm) {
                                  ,Right
                                  ,Up
                                  ,Down]);
+   var positionSeparator = ",";
+   var allTilesInPlace = function (_v14) {
+      return function () {
+         return function () {
+            var position = $String.join(positionSeparator)($List.map(function (_) {
+               return _.text;
+            })($Dict.values(_v14.tiles)));
+            return _U.eq(position,
+            _v14.goal);
+         }();
+      }();
+   };
    var update = F2(function (action,
-   _v20) {
+   _v16) {
       return function () {
          return function () {
             switch (action.ctor)
@@ -665,18 +657,22 @@ Elm.Board.make = function (_elm) {
                return function () {
                     var empty$ = A2(emptyAfterMove,
                     action._0,
-                    _v20);
+                    _v16);
                     var tileToMove = $Utils.unsafeExtract(A2($Dict.get,
                     empty$,
-                    _v20.tiles));
-                    var tiles$ = A3($Dict.insert,
-                    _v20.empty,
-                    tileToMove,
-                    _v20.tiles);
+                    _v16.tiles));
+                    var emptyTile = $Utils.unsafeExtract(A2($Dict.get,
+                    _v16.empty,
+                    _v16.tiles));
+                    var tiles$ = A2($Dict.insert,
+                    empty$,
+                    emptyTile)(A2($Dict.insert,
+                    _v16.empty,
+                    tileToMove)(_v16.tiles));
                     var model$ = _U.replace([["tiles"
                                              ,tiles$]
                                             ,["empty",empty$]],
-                    _v20);
+                    _v16);
                     return _U.replace([["isSolved"
                                        ,allTilesInPlace(model$)]],
                     model$);
@@ -687,90 +683,105 @@ Elm.Board.make = function (_elm) {
                     return _U.eq({ctor: "_Tuple2"
                                  ,_0: action._0._0
                                  ,_1: action._0._1 - 1},
-                      _v20.empty) ? A2(update,
+                      _v16.empty) ? A2(update,
                       Move(Left),
-                      _v20) : _U.eq({ctor: "_Tuple2"
+                      _v16) : _U.eq({ctor: "_Tuple2"
                                     ,_0: action._0._0
                                     ,_1: action._0._1 + 1},
-                      _v20.empty) ? A2(update,
+                      _v16.empty) ? A2(update,
                       Move(Right),
-                      _v20) : _U.eq({ctor: "_Tuple2"
+                      _v16) : _U.eq({ctor: "_Tuple2"
                                     ,_0: action._0._0 - 1
                                     ,_1: action._0._1},
-                      _v20.empty) ? A2(update,
+                      _v16.empty) ? A2(update,
                       Move(Up),
-                      _v20) : _U.eq({ctor: "_Tuple2"
+                      _v16) : _U.eq({ctor: "_Tuple2"
                                     ,_0: action._0._0 + 1
                                     ,_1: action._0._1},
-                      _v20.empty) ? A2(update,
+                      _v16.empty) ? A2(update,
                       Move(Down),
-                      _v20) : _v20;}
+                      _v16) : _v16;}
                  break;
                case "Shuffle":
                return A3($List.foldl,
-                 F2(function (_v28,model) {
+                 F2(function (_v24,model) {
                     return function () {
                        return makeRandomMove(model);
                     }();
                  }),
-                 _v20,
+                 _v16,
                  _L.range(1,action._0));}
-            return _v20;
+            return _v16;
          }();
       }();
    });
-   var makeRandomMove = function (_v30) {
+   var makeRandomMove = function (_v26) {
       return function () {
          return function () {
-            var $ = $Utils.randomListItem(_v30.seed)($List.filter(canMove(_v30))(directions)),
+            var $ = $Utils.randomListItem(_v26.seed)($List.filter(canMove(_v26))(directions)),
             randomDirection = $._0,
             seed$ = $._1;
             var modelAfterMove = A2(update,
             Move(randomDirection),
-            _v30);
+            _v26);
             return _U.replace([["seed"
                                ,seed$]],
             modelAfterMove);
          }();
       }();
    };
-   var Model = F8(function (a,
+   var Model = F9(function (a,
    b,
    c,
    d,
    e,
    f,
    g,
-   h) {
+   h,
+   i) {
       return {_: {}
              ,boardHeight: c
              ,boardWidth: b
              ,empty: g
-             ,isSolved: h
+             ,goal: h
+             ,isSolved: i
              ,seed: a
              ,tileSize: d
              ,tileSpacing: e
              ,tiles: f};
    });
-   var Tile = F3(function (a,b,c) {
+   var Tile = F2(function (a,b) {
       return {_: {}
-             ,color: c
-             ,id: a
-             ,text: b};
+             ,color: b
+             ,text: a};
    });
-   var init = F5(function (seed,
+   var init = F7(function (seed,
    boardWidth,
    boardHeight,
    tileSize,
-   tileSpacing) {
+   tileSpacing,
+   start,
+   goal) {
       return function () {
+         var startList = A2($String.split,
+         positionSeparator,
+         start);
+         var emptyIndex = $Utils.unsafeExtract(A2($List$Extra.elemIndex,
+         "",
+         startList));
+         var empty = {ctor: "_Tuple2"
+                     ,_0: emptyIndex / boardWidth | 0
+                     ,_1: A2($Basics._op["%"],
+                     emptyIndex,
+                     boardWidth)};
          var createTile = F2(function (row,
          column) {
             return function () {
                var color = $Color.grey;
-               var id = boardWidth * row + column;
-               var text = $Basics.toString(id + 1);
-               return A3(Tile,id,text,color);
+               var text = A2($Utils.listGet,
+               boardWidth * row + column,
+               startList);
+               return A2(Tile,text,color);
             }();
          });
          var addTile = F2(function (row,
@@ -790,15 +801,12 @@ Elm.Board.make = function (_elm) {
             _L.range(0,lastColumnIndex));
          });
          var lastRowIndex = boardHeight - 1;
-         var empty = {ctor: "_Tuple2"
-                     ,_0: lastRowIndex
-                     ,_1: lastColumnIndex};
          var tiles = A3($List.foldl,
          addRow,
          $Dict.empty,
          _L.range(0,lastRowIndex));
          var initialSeed = $Random.initialSeed(seed);
-         var model = A8(Model,
+         var model = A9(Model,
          initialSeed,
          boardWidth,
          boardHeight,
@@ -806,6 +814,7 @@ Elm.Board.make = function (_elm) {
          tileSpacing,
          tiles,
          empty,
+         goal,
          false);
          return _U.replace([["isSolved"
                             ,allTilesInPlace(model)]],
@@ -3762,6 +3771,883 @@ Elm.List.make = function (_elm) {
                       ,sortBy: sortBy
                       ,sortWith: sortWith};
    return _elm.List.values;
+};
+Elm.List = Elm.List || {};
+Elm.List.Extra = Elm.List.Extra || {};
+Elm.List.Extra.make = function (_elm) {
+   "use strict";
+   _elm.List = _elm.List || {};
+   _elm.List.Extra = _elm.List.Extra || {};
+   if (_elm.List.Extra.values)
+   return _elm.List.Extra.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "List.Extra",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Set = Elm.Set.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var zip5 = $List.map5(F5(function (v0,
+   v1,
+   v2,
+   v3,
+   v4) {
+      return {ctor: "_Tuple5"
+             ,_0: v0
+             ,_1: v1
+             ,_2: v2
+             ,_3: v3
+             ,_4: v4};
+   }));
+   var zip4 = $List.map4(F4(function (v0,
+   v1,
+   v2,
+   v3) {
+      return {ctor: "_Tuple4"
+             ,_0: v0
+             ,_1: v1
+             ,_2: v2
+             ,_3: v3};
+   }));
+   var zip3 = $List.map3(F3(function (v0,
+   v1,
+   v2) {
+      return {ctor: "_Tuple3"
+             ,_0: v0
+             ,_1: v1
+             ,_2: v2};
+   }));
+   var zip = $List.map2(F2(function (v0,
+   v1) {
+      return {ctor: "_Tuple2"
+             ,_0: v0
+             ,_1: v1};
+   }));
+   var isPrefixOf = function (prefix) {
+      return function ($) {
+         return $List.all($Basics.identity)(A2($List.map2,
+         F2(function (x,y) {
+            return _U.eq(x,y);
+         }),
+         prefix)($));
+      };
+   };
+   var isSuffixOf = F2(function (suffix,
+   xs) {
+      return A2(isPrefixOf,
+      $List.reverse(suffix),
+      $List.reverse(xs));
+   });
+   var selectSplit = function (xs) {
+      return function () {
+         switch (xs.ctor)
+         {case "::":
+            return A2($List._op["::"],
+              {ctor: "_Tuple3"
+              ,_0: _L.fromArray([])
+              ,_1: xs._0
+              ,_2: xs._1},
+              A2($List.map,
+              function (_v3) {
+                 return function () {
+                    switch (_v3.ctor)
+                    {case "_Tuple3":
+                       return {ctor: "_Tuple3"
+                              ,_0: A2($List._op["::"],
+                              xs._0,
+                              _v3._0)
+                              ,_1: _v3._1
+                              ,_2: _v3._2};}
+                    _U.badCase($moduleName,
+                    "on line 541, column 49 to 61");
+                 }();
+              },
+              selectSplit(xs._1)));
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 539 and 541");
+      }();
+   };
+   var select = function (xs) {
+      return function () {
+         switch (xs.ctor)
+         {case "::":
+            return A2($List._op["::"],
+              {ctor: "_Tuple2"
+              ,_0: xs._0
+              ,_1: xs._1},
+              A2($List.map,
+              function (_v11) {
+                 return function () {
+                    switch (_v11.ctor)
+                    {case "_Tuple2":
+                       return {ctor: "_Tuple2"
+                              ,_0: _v11._0
+                              ,_1: A2($List._op["::"],
+                              xs._0,
+                              _v11._1)};}
+                    _U.badCase($moduleName,
+                    "on line 531, column 41 to 48");
+                 }();
+              },
+              select(xs._1)));
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 529 and 531");
+      }();
+   };
+   var tails = A2($List.foldr,
+   F2(function (e,_v15) {
+      return function () {
+         switch (_v15.ctor)
+         {case "::":
+            return A2($List._op["::"],
+              A2($List._op["::"],e,_v15._0),
+              A2($List._op["::"],
+              _v15._0,
+              _v15._1));}
+         _U.badCase($moduleName,
+         "on line 521, column 31 to 43");
+      }();
+   }),
+   _L.fromArray([_L.fromArray([])]));
+   var isInfixOf = F2(function (infix,
+   xs) {
+      return A2($List.any,
+      isPrefixOf(infix),
+      tails(xs));
+   });
+   var inits = A2($List.foldr,
+   F2(function (e,acc) {
+      return A2($List._op["::"],
+      _L.fromArray([]),
+      A2($List.map,
+      F2(function (x,y) {
+         return A2($List._op["::"],
+         x,
+         y);
+      })(e),
+      acc));
+   }),
+   _L.fromArray([_L.fromArray([])]));
+   var groupByTransitive = F2(function (cmp,
+   xs$) {
+      return function () {
+         switch (xs$.ctor)
+         {case "::": switch (xs$._1.ctor)
+              {case "::": return function () {
+                      var _ = A2(groupByTransitive,
+                      cmp,
+                      xs$._1);
+                      var r = function () {
+                         switch (_.ctor)
+                         {case "::": return _;}
+                         _U.badCase($moduleName,
+                         "on line 504, column 28 to 52");
+                      }();
+                      var y = function () {
+                         switch (_.ctor)
+                         {case "::": return _._0;}
+                         _U.badCase($moduleName,
+                         "on line 504, column 28 to 52");
+                      }();
+                      var ys = function () {
+                         switch (_.ctor)
+                         {case "::": return _._1;}
+                         _U.badCase($moduleName,
+                         "on line 504, column 28 to 52");
+                      }();
+                      return A2(cmp,
+                      xs$._0,
+                      xs$._1._0) ? A2($List._op["::"],
+                      A2($List._op["::"],xs$._0,y),
+                      ys) : A2($List._op["::"],
+                      _L.fromArray([xs$._0]),
+                      r);
+                   }();
+                 case "[]":
+                 return _L.fromArray([_L.fromArray([xs$._0])]);}
+              break;
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 500 and 507");
+      }();
+   });
+   var stripPrefix = F2(function (prefix,
+   xs) {
+      return function () {
+         var step = F2(function (e,
+         m) {
+            return function () {
+               switch (m.ctor)
+               {case "Just": switch (m._0.ctor)
+                    {case "::": return _U.eq(e,
+                         m._0._0) ? $Maybe.Just(m._0._1) : $Maybe.Nothing;
+                       case "[]":
+                       return $Maybe.Nothing;}
+                    break;
+                  case "Nothing":
+                  return $Maybe.Nothing;}
+               _U.badCase($moduleName,
+               "between lines 461 and 467");
+            }();
+         });
+         return A3($List.foldl,
+         step,
+         $Maybe.Just(xs),
+         prefix);
+      }();
+   });
+   var dropWhileEnd = function (p) {
+      return A2($List.foldr,
+      F2(function (x,xs) {
+         return p(x) && $List.isEmpty(xs) ? _L.fromArray([]) : A2($List._op["::"],
+         x,
+         xs);
+      }),
+      _L.fromArray([]));
+   };
+   var takeWhileEnd = function (p) {
+      return function () {
+         var step = F2(function (x,
+         _v37) {
+            return function () {
+               switch (_v37.ctor)
+               {case "_Tuple2":
+                  return p(x) && _v37._1 ? {ctor: "_Tuple2"
+                                           ,_0: A2($List._op["::"],
+                                           x,
+                                           _v37._0)
+                                           ,_1: true} : {ctor: "_Tuple2"
+                                                        ,_0: _v37._0
+                                                        ,_1: false};}
+               _U.badCase($moduleName,
+               "on line 420, column 24 to 73");
+            }();
+         });
+         return function ($) {
+            return $Basics.fst(A2($List.foldr,
+            step,
+            {ctor: "_Tuple2"
+            ,_0: _L.fromArray([])
+            ,_1: true})($));
+         };
+      }();
+   };
+   var splitAt = F2(function (n,
+   xs) {
+      return {ctor: "_Tuple2"
+             ,_0: A2($List.take,n,xs)
+             ,_1: A2($List.drop,n,xs)};
+   });
+   var unfoldr = F2(function (f,
+   seed) {
+      return function () {
+         var _v41 = f(seed);
+         switch (_v41.ctor)
+         {case "Just":
+            switch (_v41._0.ctor)
+              {case "_Tuple2":
+                 return A2($List._op["::"],
+                   _v41._0._0,
+                   A2(unfoldr,f,_v41._0._1));}
+              break;
+            case "Nothing":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 397 and 399");
+      }();
+   });
+   var scanr1 = F2(function (f,
+   xs$) {
+      return function () {
+         switch (xs$.ctor)
+         {case "::": switch (xs$._1.ctor)
+              {case "[]":
+                 return _L.fromArray([xs$._0]);}
+              return function () {
+                 var _ = A2(scanr1,f,xs$._1);
+                 var q = function () {
+                    switch (_.ctor)
+                    {case "::": return _._0;}
+                    _U.badCase($moduleName,
+                    "on line 388, column 37 to 48");
+                 }();
+                 var qs = function () {
+                    switch (_.ctor)
+                    {case "::": return _;}
+                    _U.badCase($moduleName,
+                    "on line 388, column 37 to 48");
+                 }();
+                 return A2($List._op["::"],
+                 A2(f,xs$._0,q),
+                 qs);
+              }();
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 385 and 389");
+      }();
+   });
+   var scanr = F3(function (f,
+   acc,
+   xs$) {
+      return function () {
+         switch (xs$.ctor)
+         {case "::": return function () {
+                 var _ = A3(scanr,
+                 f,
+                 acc,
+                 xs$._1);
+                 var q = function () {
+                    switch (_.ctor)
+                    {case "::": return _._0;}
+                    _U.badCase($moduleName,
+                    "on line 374, column 37 to 51");
+                 }();
+                 var qs = function () {
+                    switch (_.ctor)
+                    {case "::": return _;}
+                    _U.badCase($moduleName,
+                    "on line 374, column 37 to 51");
+                 }();
+                 return A2($List._op["::"],
+                 A2(f,xs$._0,q),
+                 qs);
+              }();
+            case "[]":
+            return _L.fromArray([acc]);}
+         _U.badCase($moduleName,
+         "between lines 372 and 375");
+      }();
+   });
+   var scanl1 = F2(function (f,
+   xs$) {
+      return function () {
+         switch (xs$.ctor)
+         {case "::":
+            return A3($List.scanl,
+              f,
+              xs$._0,
+              xs$._1);
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 357 and 359");
+      }();
+   });
+   var foldr1 = F2(function (f,
+   xs) {
+      return function () {
+         var mf = F2(function (x,m) {
+            return $Maybe.Just(function () {
+               switch (m.ctor)
+               {case "Just": return A2(f,
+                    x,
+                    m._0);
+                  case "Nothing": return x;}
+               _U.badCase($moduleName,
+               "between lines 336 and 338");
+            }());
+         });
+         return A3($List.foldr,
+         mf,
+         $Maybe.Nothing,
+         xs);
+      }();
+   });
+   var foldl1 = F2(function (f,
+   xs) {
+      return function () {
+         var mf = F2(function (x,m) {
+            return $Maybe.Just(function () {
+               switch (m.ctor)
+               {case "Just": return A2(f,
+                    m._0,
+                    x);
+                  case "Nothing": return x;}
+               _U.badCase($moduleName,
+               "between lines 321 and 323");
+            }());
+         });
+         return A3($List.foldl,
+         mf,
+         $Maybe.Nothing,
+         xs);
+      }();
+   });
+   var permutations = function (xs$) {
+      return function () {
+         switch (xs$.ctor)
+         {case "[]":
+            return _L.fromArray([_L.fromArray([])]);}
+         return function () {
+            var f = function (_v71) {
+               return function () {
+                  switch (_v71.ctor)
+                  {case "_Tuple2":
+                     return A2($List.map,
+                       F2(function (x,y) {
+                          return A2($List._op["::"],
+                          x,
+                          y);
+                       })(_v71._0),
+                       permutations(_v71._1));}
+                  _U.badCase($moduleName,
+                  "on line 309, column 26 to 54");
+               }();
+            };
+            return A2($List.concatMap,
+            f,
+            select(xs$));
+         }();
+      }();
+   };
+   var isPermutationOf = F2(function (permut,
+   xs) {
+      return A2($List.member,
+      permut,
+      permutations(xs));
+   });
+   var subsequencesNonEmpty = function (xs) {
+      return function () {
+         switch (xs.ctor)
+         {case "::": return function () {
+                 var f = F2(function (ys,r) {
+                    return A2($List._op["::"],
+                    ys,
+                    A2($List._op["::"],
+                    A2($List._op["::"],xs._0,ys),
+                    r));
+                 });
+                 return A2($List._op["::"],
+                 _L.fromArray([xs._0]),
+                 A3($List.foldr,
+                 f,
+                 _L.fromArray([]),
+                 subsequencesNonEmpty(xs._1)));
+              }();
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 295 and 299");
+      }();
+   };
+   var subsequences = function (xs) {
+      return A2($List._op["::"],
+      _L.fromArray([]),
+      subsequencesNonEmpty(xs));
+   };
+   var isSubsequenceOf = F2(function (subseq,
+   xs) {
+      return A2($List.member,
+      subseq,
+      subsequences(xs));
+   });
+   var transpose = function (ll) {
+      return function () {
+         switch (ll.ctor)
+         {case "::": switch (ll._0.ctor)
+              {case "::": return function () {
+                      var tails = A2($List.filterMap,
+                      $List.tail,
+                      ll._1);
+                      var heads = A2($List.filterMap,
+                      $List.head,
+                      ll._1);
+                      return A2($List._op["::"],
+                      A2($List._op["::"],
+                      ll._0._0,
+                      heads),
+                      transpose(A2($List._op["::"],
+                      ll._0._1,
+                      tails)));
+                   }();
+                 case "[]":
+                 return transpose(ll._1);}
+              break;
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 272 and 280");
+      }();
+   };
+   var intercalate = function (xs) {
+      return function ($) {
+         return $List.concat($List.intersperse(xs)($));
+      };
+   };
+   var singleton = function (x) {
+      return _L.fromArray([x]);
+   };
+   var replaceIf = F3(function (predicate,
+   replacement,
+   list) {
+      return A2($List.map,
+      function (item) {
+         return predicate(item) ? replacement : item;
+      },
+      list);
+   });
+   var findIndices = function (p) {
+      return function ($) {
+         return $List.map($Basics.fst)($List.filter(function (_v83) {
+            return function () {
+               switch (_v83.ctor)
+               {case "_Tuple2":
+                  return p(_v83._1);}
+               _U.badCase($moduleName,
+               "on line 240, column 46 to 49");
+            }();
+         })($List.indexedMap(F2(function (v0,
+         v1) {
+            return {ctor: "_Tuple2"
+                   ,_0: v0
+                   ,_1: v1};
+         }))($)));
+      };
+   };
+   var findIndex = function (p) {
+      return function ($) {
+         return $List.head(findIndices(p)($));
+      };
+   };
+   var elemIndices = function (x) {
+      return findIndices(F2(function (x,
+      y) {
+         return _U.eq(x,y);
+      })(x));
+   };
+   var elemIndex = function (x) {
+      return findIndex(F2(function (x,
+      y) {
+         return _U.eq(x,y);
+      })(x));
+   };
+   var find = F2(function (predicate,
+   list) {
+      return function () {
+         switch (list.ctor)
+         {case "::":
+            return predicate(list._0) ? $Maybe.Just(list._0) : A2(find,
+              predicate,
+              list._1);
+            case "[]":
+            return $Maybe.Nothing;}
+         _U.badCase($moduleName,
+         "between lines 196 and 204");
+      }();
+   });
+   var notMember = function (x) {
+      return function ($) {
+         return $Basics.not($List.member(x)($));
+      };
+   };
+   var andThen = $Basics.flip($List.concatMap);
+   var lift2 = F3(function (f,
+   la,
+   lb) {
+      return A2(andThen,
+      la,
+      function (a) {
+         return A2(andThen,
+         lb,
+         function (b) {
+            return _L.fromArray([A2(f,
+            a,
+            b)]);
+         });
+      });
+   });
+   var lift3 = F4(function (f,
+   la,
+   lb,
+   lc) {
+      return A2(andThen,
+      la,
+      function (a) {
+         return A2(andThen,
+         lb,
+         function (b) {
+            return A2(andThen,
+            lc,
+            function (c) {
+               return _L.fromArray([A3(f,
+               a,
+               b,
+               c)]);
+            });
+         });
+      });
+   });
+   var lift4 = F5(function (f,
+   la,
+   lb,
+   lc,
+   ld) {
+      return A2(andThen,
+      la,
+      function (a) {
+         return A2(andThen,
+         lb,
+         function (b) {
+            return A2(andThen,
+            lc,
+            function (c) {
+               return A2(andThen,
+               ld,
+               function (d) {
+                  return _L.fromArray([A4(f,
+                  a,
+                  b,
+                  c,
+                  d)]);
+               });
+            });
+         });
+      });
+   });
+   var andMap = F2(function (fl,
+   l) {
+      return A3($List.map2,
+      F2(function (x,y) {
+         return x(y);
+      }),
+      fl,
+      l);
+   });
+   var dropDuplicates = function (list) {
+      return function () {
+         var step = F2(function (next,
+         _v90) {
+            return function () {
+               switch (_v90.ctor)
+               {case "_Tuple2":
+                  return A2($Set.member,
+                    next,
+                    _v90._0) ? {ctor: "_Tuple2"
+                               ,_0: _v90._0
+                               ,_1: _v90._1} : {ctor: "_Tuple2"
+                                               ,_0: A2($Set.insert,
+                                               next,
+                                               _v90._0)
+                                               ,_1: A2($List._op["::"],
+                                               next,
+                                               _v90._1)};}
+               _U.badCase($moduleName,
+               "between lines 137 and 139");
+            }();
+         });
+         return $List.reverse($Basics.snd(A3($List.foldl,
+         step,
+         {ctor: "_Tuple2"
+         ,_0: $Set.empty
+         ,_1: _L.fromArray([])},
+         list)));
+      }();
+   };
+   var dropWhile = F2(function (predicate,
+   list) {
+      return function () {
+         switch (list.ctor)
+         {case "::":
+            return predicate(list._0) ? A2(dropWhile,
+              predicate,
+              list._1) : list;
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 126 and 129");
+      }();
+   });
+   var takeWhile = F2(function (predicate,
+   list) {
+      return function () {
+         switch (list.ctor)
+         {case "::":
+            return predicate(list._0) ? A2($List._op["::"],
+              list._0,
+              A2(takeWhile,
+              predicate,
+              list._1)) : _L.fromArray([]);
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 117 and 120");
+      }();
+   });
+   var span = F2(function (p,xs) {
+      return {ctor: "_Tuple2"
+             ,_0: A2(takeWhile,p,xs)
+             ,_1: A2(dropWhile,p,xs)};
+   });
+   var $break = function (p) {
+      return span(function ($) {
+         return $Basics.not(p($));
+      });
+   };
+   var groupBy = F2(function (eq,
+   xs$) {
+      return function () {
+         switch (xs$.ctor)
+         {case "::": return function () {
+                 var $ = A2(span,
+                 eq(xs$._0),
+                 xs$._1),
+                 ys = $._0,
+                 zs = $._1;
+                 return A2($List._op["::"],
+                 A2($List._op["::"],xs$._0,ys),
+                 A2(groupBy,eq,zs));
+              }();
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 489 and 492");
+      }();
+   });
+   var group = groupBy(F2(function (x,
+   y) {
+      return _U.eq(x,y);
+   }));
+   var minimumBy = F2(function (f,
+   ls) {
+      return function () {
+         var minBy = F3(function (f,
+         x,
+         y) {
+            return _U.cmp(f(x),
+            f(y)) < 0 ? x : y;
+         });
+         return function () {
+            switch (ls.ctor)
+            {case "::":
+               return $Maybe.Just(A3($List.foldl,
+                 minBy(f),
+                 ls._0,
+                 ls._1));}
+            return $Maybe.Nothing;
+         }();
+      }();
+   });
+   var maximumBy = F2(function (f,
+   ls) {
+      return function () {
+         var maxBy = F3(function (f,
+         x,
+         y) {
+            return _U.cmp(f(x),
+            f(y)) > 0 ? x : y;
+         });
+         return function () {
+            switch (ls.ctor)
+            {case "::":
+               return $Maybe.Just(A3($List.foldl,
+                 maxBy(f),
+                 ls._0,
+                 ls._1));}
+            return $Maybe.Nothing;
+         }();
+      }();
+   });
+   var uncons = function (xs) {
+      return function () {
+         switch (xs.ctor)
+         {case "::":
+            return $Maybe.Just({ctor: "_Tuple2"
+                               ,_0: xs._0
+                               ,_1: xs._1});
+            case "[]":
+            return $Maybe.Nothing;}
+         _U.badCase($moduleName,
+         "between lines 91 and 93");
+      }();
+   };
+   var init = function () {
+      var maybe = F2(function (d,
+      f) {
+         return function ($) {
+            return $Maybe.withDefault(d)($Maybe.map(f)($));
+         };
+      });
+      return A2($List.foldr,
+      function ($) {
+         return F2(function (x,y) {
+            return function ($) {
+               return x(y($));
+            };
+         })($Maybe.Just)(maybe(_L.fromArray([]))(F2(function (x,
+         y) {
+            return A2($List._op["::"],
+            x,
+            y);
+         })($)));
+      },
+      $Maybe.Nothing);
+   }();
+   var last = foldl1($Basics.flip($Basics.always));
+   _elm.List.Extra.values = {_op: _op
+                            ,last: last
+                            ,init: init
+                            ,uncons: uncons
+                            ,minimumBy: minimumBy
+                            ,maximumBy: maximumBy
+                            ,andMap: andMap
+                            ,andThen: andThen
+                            ,takeWhile: takeWhile
+                            ,dropWhile: dropWhile
+                            ,dropDuplicates: dropDuplicates
+                            ,replaceIf: replaceIf
+                            ,singleton: singleton
+                            ,intercalate: intercalate
+                            ,transpose: transpose
+                            ,subsequences: subsequences
+                            ,permutations: permutations
+                            ,foldl1: foldl1
+                            ,foldr1: foldr1
+                            ,scanl1: scanl1
+                            ,scanr: scanr
+                            ,scanr1: scanr1
+                            ,unfoldr: unfoldr
+                            ,splitAt: splitAt
+                            ,takeWhileEnd: takeWhileEnd
+                            ,dropWhileEnd: dropWhileEnd
+                            ,span: span
+                            ,$break: $break
+                            ,stripPrefix: stripPrefix
+                            ,group: group
+                            ,groupBy: groupBy
+                            ,groupByTransitive: groupByTransitive
+                            ,inits: inits
+                            ,tails: tails
+                            ,select: select
+                            ,selectSplit: selectSplit
+                            ,isPrefixOf: isPrefixOf
+                            ,isSuffixOf: isSuffixOf
+                            ,isInfixOf: isInfixOf
+                            ,isSubsequenceOf: isSubsequenceOf
+                            ,isPermutationOf: isPermutationOf
+                            ,notMember: notMember
+                            ,find: find
+                            ,elemIndex: elemIndex
+                            ,elemIndices: elemIndices
+                            ,findIndex: findIndex
+                            ,findIndices: findIndices
+                            ,zip: zip
+                            ,zip3: zip3
+                            ,zip4: zip4
+                            ,zip5: zip5
+                            ,lift2: lift2
+                            ,lift3: lift3
+                            ,lift4: lift4};
+   return _elm.List.Extra.values;
 };
 Elm.Maybe = Elm.Maybe || {};
 Elm.Maybe.make = function (_elm) {
@@ -10956,12 +11842,12 @@ Elm.Utils.make = function (_elm) {
                       max,
                       _v2._0);}
                  _U.badCase($moduleName,
-                 "between lines 48 and 53");
+                 "between lines 55 and 60");
               }();
             case "Nothing":
             return $default;}
          _U.badCase($moduleName,
-         "between lines 43 and 53");
+         "between lines 50 and 60");
       }();
    });
    var queryParams = function (locationSearch) {
@@ -10973,7 +11859,7 @@ Elm.Utils.make = function (_elm) {
             case "UrlParams":
             return _v5._0;}
          _U.badCase($moduleName,
-         "between lines 34 and 39");
+         "between lines 40 and 45");
       }();
    };
    var unsafeExtract = function (maybe) {
@@ -11002,11 +11888,18 @@ Elm.Utils.make = function (_elm) {
                 ,_1: newSeed};
       }();
    });
+   var listGet = F2(function (index,
+   list) {
+      return unsafeExtract($List.head(A2($List.drop,
+      index,
+      list)));
+   });
    _elm.Utils.values = {_op: _op
                        ,unsafeExtract: unsafeExtract
                        ,randomListItem: randomListItem
                        ,queryParams: queryParams
-                       ,dictGetInt: dictGetInt};
+                       ,dictGetInt: dictGetInt
+                       ,listGet: listGet};
    return _elm.Utils.values;
 };
 Elm.Window = Elm.Window || {};

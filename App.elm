@@ -6,9 +6,11 @@ import Graphics.Collage
 import Signal.Extra
 import Keyboard
 import Window
+import Maybe
 import Touch
 import Board
 import Utils
+import Debug
 
 
 -- MODEL
@@ -75,8 +77,14 @@ initialModel : (Int, Int) -> Model
 initialModel windowDimensionsValue =
   let
     tileSpacing = 1
+
+    start = Dict.get "start" queryParams
+      |> Maybe.withDefault "default start"
+
+    goal = Dict.get "goal" queryParams
+      |> Maybe.withDefault "default goal"
   in
-    Board.init initialSeed initialWidth initialHeight (initialTileSize windowDimensionsValue) tileSpacing
+    Board.init initialSeed initialWidth initialHeight (initialTileSize windowDimensionsValue) tileSpacing start goal
       |> Board.update (Board.Shuffle initialShuffle)
 
 

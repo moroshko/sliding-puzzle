@@ -1,18 +1,26 @@
-module Board (Model, init, Direction(..), Action(..), update, view) where
+module Board
+  ( Model
+  , init
+  , Direction(..)
+  , Action(..)
+  , update
+  , view
+  ) where
 
 import Graphics.Collage exposing (Form)
 import Color exposing (Color)
 import Random exposing (Seed)
 import Dict exposing (Dict)
-import Text
+import List.Extra
+import String
 import Utils
+import Text
 
 
 -- MODEL
 
 type alias Tile =
-  { id : Int
-  , text : String
+  { text : String
   , color : Color
   }
 
@@ -24,25 +32,34 @@ type alias Model =
   , tileSpacing : Int
   , tiles : Dict (Int, Int) Tile
   , empty : (Int, Int)
+  , goal : String
   , isSolved : Bool
   }
 
 
-init : Int -> Int -> Int -> Int -> Int -> Model
-init seed boardWidth boardHeight tileSize tileSpacing =
+positionSeparator : String
+positionSeparator = ","
+
+
+init : Int -> Int -> Int -> Int -> Int -> String -> String -> Model
+init seed boardWidth boardHeight tileSize tileSpacing start goal =
   let
     initialSeed = Random.initialSeed seed
     lastRowIndex = boardHeight - 1
     lastColumnIndex = boardWidth - 1
-    empty = (lastRowIndex, lastColumnIndex)
+
+    startList = String.split positionSeparator start
+    emptyIndex = List.Extra.elemIndex "" startList
+      |> Utils.unsafeExtract
+
+    empty = (emptyIndex // boardWidth, emptyIndex % boardWidth)
     
     createTile row column =
       let
-        id = boardWidth * row + column
-        text = id + 1 |> toString
+        text = Utils.listGet (boardWidth * row + column) startList
         color = Color.grey
       in
-        Tile id text color
+        Tile text color
 
     addTile row column =
       Dict.insert (row, column) (createTile row column)
@@ -51,7 +68,7 @@ init seed boardWidth boardHeight tileSize tileSpacing =
       List.foldl (addTile row) dict [0..lastColumnIndex] 
     
     tiles = List.foldl addRow Dict.empty [0..lastRowIndex]
-    model = Model initialSeed boardWidth boardHeight tileSize tileSpacing tiles empty False
+    model = Model initialSeed boardWidth boardHeight tileSize tileSpacing tiles empty goal False
   in
     { model | isSolved <- allTilesInPlace model }
 
@@ -67,14 +84,13 @@ type Action
 
 
 allTilesInPlace : Model -> Bool
-allTilesInPlace { boardWidth, tiles, empty } =
+allTilesInPlace { tiles, goal } =
   let
-    tileInPlace (row, column) tile =
-      if (row, column) == empty
-        then True
-        else boardWidth * row + column == tile.id
+    position = Dict.values tiles
+      |> List.map .text
+      |> String.join positionSeparator
   in
-    Dict.foldr (\coords tile result -> result && tileInPlace coords tile) True tiles
+    position == goal
 
 
 emptyAfterMove : Direction -> Model -> (Int, Int)
@@ -141,9 +157,12 @@ update action ({ tiles, empty } as model) =
   case action of
     Move direction ->
       let
+        emptyTile = Dict.get empty tiles |> Utils.unsafeExtract
         empty' = emptyAfterMove direction model
         tileToMove = Dict.get empty' tiles |> Utils.unsafeExtract
-        tiles' = Dict.insert empty tileToMove tiles
+        tiles' = tiles
+          |> Dict.insert empty tileToMove
+          |> Dict.insert empty' emptyTile
         model' =
           { model |
               tiles <- tiles'
