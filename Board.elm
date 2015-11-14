@@ -144,12 +144,12 @@ directions = [ Left, Right, Up, Down ]
 makeRandomMove : Model -> Model
 makeRandomMove ({ seed } as model) =
   let
-    (randomDirection, seed') = directions
+    (randomDirection, newSeed) = directions
       |> List.filter (canMove model)
       |> Utils.randomListItem seed
     modelAfterMove = update (Move randomDirection) model
   in
-    { modelAfterMove | seed <- seed' }
+    { modelAfterMove | seed <- newSeed }
 
 
 update : Action -> Model -> Model
@@ -158,18 +158,18 @@ update action ({ tiles, empty } as model) =
     Move direction ->
       let
         emptyTile = Dict.get empty tiles |> Utils.unsafeExtract
-        empty' = emptyAfterMove direction model
-        tileToMove = Dict.get empty' tiles |> Utils.unsafeExtract
-        tiles' = tiles
+        newEmpty = emptyAfterMove direction model
+        tileToMove = Dict.get newEmpty tiles |> Utils.unsafeExtract
+        newTiles = tiles
           |> Dict.insert empty tileToMove
-          |> Dict.insert empty' emptyTile
-        model' =
+          |> Dict.insert newEmpty emptyTile
+        newModel =
           { model |
-              tiles <- tiles'
-            , empty <- empty'
+              tiles <- newTiles
+            , empty <- newEmpty
           }
       in
-        { model' | isSolved <- allTilesInPlace model' }
+        { newModel | isSolved <- allTilesInPlace newModel }
 
     MoveTile (row, column) ->
       if | (row, column - 1) == empty -> update (Move Left) model
@@ -190,14 +190,14 @@ update action ({ tiles, empty } as model) =
 renderBoard : Model -> Form
 renderBoard { boardWidth, boardHeight, tileSize, isSolved } =
   let
-    boardWidth' = boardWidth * tileSize
-    boardHeight' = boardHeight * tileSize
+    boardWidthPx = boardWidth * tileSize
+    boardHeightPx = boardHeight * tileSize
     boardColor =
       if isSolved
         then Color.rgb 90 160 90
         else Color.lightGrey
   in
-    Graphics.Collage.rect (toFloat boardWidth') (toFloat boardHeight')
+    Graphics.Collage.rect (toFloat boardWidthPx) (toFloat boardHeightPx)
       |> Graphics.Collage.filled boardColor
 
 
@@ -208,13 +208,13 @@ renderTile { boardWidth, boardHeight, tileSize, tileSpacing, tiles, empty } row 
     else
       let
         size = tileSize - 2 * tileSpacing
-        boardWidth' = boardWidth * tileSize
-        boardHeight' = boardHeight * tileSize
+        boardWidthPx = boardWidth * tileSize
+        boardHeightPx = boardHeight * tileSize
         textSize = (tileSize - 2 * tileSpacing) // 2
         textOffset = textSize // 5
 
-        dx = (size - boardWidth') // 2 + (column * tileSize) + tileSpacing
-        dy = (boardHeight' - size) // 2 - (row * tileSize) - tileSpacing
+        dx = (size - boardWidthPx) // 2 + (column * tileSize) + tileSpacing
+        dy = (boardHeightPx - size) // 2 - (row * tileSize) - tileSpacing
 
         tile = Dict.get (row, column) tiles |> Utils.unsafeExtract
       in
