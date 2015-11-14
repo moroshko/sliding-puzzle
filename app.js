@@ -22,6 +22,7 @@ Elm.App.make = function (_elm) {
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $Signal$Extra = Elm.Signal.Extra.make(_elm),
+   $String = Elm.String.make(_elm),
    $Touch = Elm.Touch.make(_elm),
    $Utils = Elm.Utils.make(_elm),
    $Window = Elm.Window.make(_elm);
@@ -47,7 +48,7 @@ Elm.App.make = function (_elm) {
               _v0._0,
               _v0._1)($Board.view(model));}
          _U.badCase($moduleName,
-         "between lines 144 and 145");
+         "between lines 161 and 162");
       }();
    });
    var WindowResize = function (a) {
@@ -134,10 +135,10 @@ Elm.App.make = function (_elm) {
                          queryParams);
                       }();}
                  _U.badCase($moduleName,
-                 "between lines 59 and 68");
+                 "between lines 60 and 69");
               }();}
          _U.badCase($moduleName,
-         "between lines 59 and 68");
+         "between lines 60 and 69");
       }();
    });
    var update = F2(function (action,
@@ -228,14 +229,21 @@ Elm.App.make = function (_elm) {
       maxShuffle,
       queryParams);
    }();
+   var defaultGoal = function () {
+      var goal = $String.join(",")($List.map($Basics.toString)(_L.range(1,
+      initialWidth * initialHeight - 1)));
+      return A2($Basics._op["++"],
+      goal,
+      ",");
+   }();
+   var initialStart = $Maybe.withDefault(defaultGoal)(A2($Dict.get,
+   "start",
+   queryParams));
+   var initialGoal = $Maybe.withDefault(defaultGoal)(A2($Dict.get,
+   "goal",
+   queryParams));
    var initialModel = function (windowDimensionsValue) {
       return function () {
-         var goal = $Maybe.withDefault("default goal")(A2($Dict.get,
-         "goal",
-         queryParams));
-         var start = $Maybe.withDefault("default start")(A2($Dict.get,
-         "start",
-         queryParams));
          var tileSpacing = 1;
          return $Board.update($Board.Shuffle(initialShuffle))(A7($Board.init,
          initialSeed,
@@ -243,8 +251,8 @@ Elm.App.make = function (_elm) {
          initialHeight,
          initialTileSize(windowDimensionsValue),
          tileSpacing,
-         start,
-         goal));
+         initialStart,
+         initialGoal));
       }();
    };
    var model = function () {
@@ -271,6 +279,9 @@ Elm.App.make = function (_elm) {
                      ,initialTileSize: initialTileSize
                      ,initialShuffle: initialShuffle
                      ,getTileSize: getTileSize
+                     ,defaultGoal: defaultGoal
+                     ,initialStart: initialStart
+                     ,initialGoal: initialGoal
                      ,queryParams: queryParams
                      ,initialModel: initialModel
                      ,NoOp: NoOp
@@ -508,11 +519,11 @@ Elm.Board.make = function (_elm) {
             _v0.tiles));
             var textSize = (_v0.tileSize - 2 * _v0.tileSpacing) / 2 | 0;
             var textOffset = textSize / 5 | 0;
-            var boardHeight$ = _v0.boardHeight * _v0.tileSize;
-            var boardWidth$ = _v0.boardWidth * _v0.tileSize;
+            var boardHeightPx = _v0.boardHeight * _v0.tileSize;
+            var boardWidthPx = _v0.boardWidth * _v0.tileSize;
             var size = _v0.tileSize - 2 * _v0.tileSpacing;
-            var dx = ((size - boardWidth$) / 2 | 0) + column * _v0.tileSize + _v0.tileSpacing;
-            var dy = ((boardHeight$ - size) / 2 | 0) - row * _v0.tileSize - _v0.tileSpacing;
+            var dx = ((size - boardWidthPx) / 2 | 0) + column * _v0.tileSize + _v0.tileSpacing;
+            var dy = ((boardHeightPx - size) / 2 | 0) - row * _v0.tileSize - _v0.tileSpacing;
             return _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
                                                         ,_0: $Basics.toFloat(dx)
                                                         ,_1: $Basics.toFloat(dy)})($Graphics$Collage.filled(tile.color)($Graphics$Collage.square($Basics.toFloat(size))))
@@ -540,11 +551,11 @@ Elm.Board.make = function (_elm) {
             90,
             160,
             90) : $Color.lightGrey;
-            var boardHeight$ = _v4.boardHeight * _v4.tileSize;
-            var boardWidth$ = _v4.boardWidth * _v4.tileSize;
+            var boardHeightPx = _v4.boardHeight * _v4.tileSize;
+            var boardWidthPx = _v4.boardWidth * _v4.tileSize;
             return $Graphics$Collage.filled(boardColor)(A2($Graphics$Collage.rect,
-            $Basics.toFloat(boardWidth$),
-            $Basics.toFloat(boardHeight$)));
+            $Basics.toFloat(boardWidthPx),
+            $Basics.toFloat(boardHeightPx)));
          }();
       }();
    };
@@ -655,27 +666,27 @@ Elm.Board.make = function (_elm) {
             switch (action.ctor)
             {case "Move":
                return function () {
-                    var empty$ = A2(emptyAfterMove,
+                    var newEmpty = A2(emptyAfterMove,
                     action._0,
                     _v16);
                     var tileToMove = $Utils.unsafeExtract(A2($Dict.get,
-                    empty$,
+                    newEmpty,
                     _v16.tiles));
                     var emptyTile = $Utils.unsafeExtract(A2($Dict.get,
                     _v16.empty,
                     _v16.tiles));
-                    var tiles$ = A2($Dict.insert,
-                    empty$,
+                    var newTiles = A2($Dict.insert,
+                    newEmpty,
                     emptyTile)(A2($Dict.insert,
                     _v16.empty,
                     tileToMove)(_v16.tiles));
-                    var model$ = _U.replace([["tiles"
-                                             ,tiles$]
-                                            ,["empty",empty$]],
+                    var newModel = _U.replace([["tiles"
+                                               ,newTiles]
+                                              ,["empty",newEmpty]],
                     _v16);
                     return _U.replace([["isSolved"
-                                       ,allTilesInPlace(model$)]],
-                    model$);
+                                       ,allTilesInPlace(newModel)]],
+                    newModel);
                  }();
                case "MoveTile":
                switch (action._0.ctor)
@@ -720,12 +731,12 @@ Elm.Board.make = function (_elm) {
          return function () {
             var $ = $Utils.randomListItem(_v26.seed)($List.filter(canMove(_v26))(directions)),
             randomDirection = $._0,
-            seed$ = $._1;
+            newSeed = $._1;
             var modelAfterMove = A2(update,
             Move(randomDirection),
             _v26);
             return _U.replace([["seed"
-                               ,seed$]],
+                               ,newSeed]],
             modelAfterMove);
          }();
       }();

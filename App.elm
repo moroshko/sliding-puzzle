@@ -6,6 +6,7 @@ import Graphics.Collage
 import Signal.Extra
 import Keyboard
 import Window
+import String
 import Maybe
 import Touch
 import Board
@@ -68,6 +69,28 @@ getTileSize (boardWidth, boardHeight) (windowWidth, windowHeight) =
     Utils.dictGetInt "size" defaultTileSize minTileSize maxTileSize queryParams
 
 
+defaultGoal : String
+defaultGoal =
+  let
+    goal = [1..(initialWidth * initialHeight - 1)]
+      |> List.map toString
+      |> String.join ","
+  in
+    goal ++ ","
+
+
+initialStart : String
+initialStart =
+  Dict.get "start" queryParams
+    |> Maybe.withDefault defaultGoal
+
+
+initialGoal : String
+initialGoal =
+  Dict.get "goal" queryParams
+    |> Maybe.withDefault defaultGoal
+
+
 queryParams : Dict String String
 queryParams =
   Utils.queryParams locationSearch
@@ -77,14 +100,8 @@ initialModel : (Int, Int) -> Model
 initialModel windowDimensionsValue =
   let
     tileSpacing = 1
-
-    start = Dict.get "start" queryParams
-      |> Maybe.withDefault "default start"
-
-    goal = Dict.get "goal" queryParams
-      |> Maybe.withDefault "default goal"
   in
-    Board.init initialSeed initialWidth initialHeight (initialTileSize windowDimensionsValue) tileSpacing start goal
+    Board.init initialSeed initialWidth initialHeight (initialTileSize windowDimensionsValue) tileSpacing initialStart initialGoal
       |> Board.update (Board.Shuffle initialShuffle)
 
 
