@@ -1,6 +1,7 @@
 # Sliding Puzzle
 
-### <a href="http://bit.ly/playthisgamenow" target="_blank">Play</a>
+### <a href="http://moroshko.github.io/sliding-puzzle/?width=4&height=4" target="_blank">Classic 15-puzzle</a>
+### <a href="http://bit.ly/playthisgamenow" target="_blank">More interesting challenge</a> (Hint: this is solvable!)
 
 ## Game Parameters
 
